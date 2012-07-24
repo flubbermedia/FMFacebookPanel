@@ -39,7 +39,7 @@
 - (IBAction)didTapShareImage:(id)sender
 {
     NSString *text = @"Sharing images is very easy";
-    UIImage *image = [UIImage imageNamed:@"Image.png"];
+    UIImage *image = [UIImage imageNamed:@"Flubber.png"];
     
     [[FMFacebookPanel sharedViewController] setText:text];
     [[FMFacebookPanel sharedViewController] setImage:image];
