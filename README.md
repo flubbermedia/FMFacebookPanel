@@ -6,6 +6,8 @@ This lets you easily post text with a link or an image on Facebook without takin
 
 ![Screenshot](http://assets.flubbermedia.com/github/github-fmfacebookpanel-screen.png)
 
+**NOTE: the supported build target is iOS 5.1 (Xcode 4.4)*
+
 Installation
 ------------
 
@@ -54,6 +56,7 @@ Let the Facebook property handle the url in the `application:handleOpenURL:`
 
 Usage
 -----
+(see sample Xcode project `/Demo`)
 
 Use the shared view controller to set the initial text with an image or a link
 
