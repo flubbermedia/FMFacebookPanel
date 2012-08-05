@@ -26,34 +26,42 @@ Setup
 
 Setup the sharedViewController with your Facebook App ID
 
-    - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-    {
-        [[FMFacebookPanel sharedViewController] setup:kFacebookAppID];
-        return YES;
-    }
+```objectivec
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+    [[FMFacebookPanel sharedViewController] setup:kFacebookAppID];
+    return YES;
+}
+```
   
 Extend the Facebook token in the `applicationDidBecomeActive:`
 
-    - (void)applicationDidBecomeActive:(UIApplication *)application
-    {    
-        [[FMFacebookPanel sharedViewController].facebook extendAccessTokenIfNeeded];
-    }
+```objectivec
+- (void)applicationDidBecomeActive:(UIApplication *)application
+{    
+    [[FMFacebookPanel sharedViewController].facebook extendAccessTokenIfNeeded];
+}
+```
 
 Let the Facebook property handle the url in the `application:handleOpenURL:`
 
-    - (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url
-    {    
-        return [[FMFacebookPanel sharedViewController].facebook handleOpenURL:url];
-    }
+```objectivec
+- (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url
+{    
+    return [[FMFacebookPanel sharedViewController].facebook handleOpenURL:url];
+}
+```
 
 Usage
 -----
 
 Use the shared view controller to set the initial text with an image or a link
 
-    [[FMFacebookPanel sharedViewController] setText:text];
-    [[FMFacebookPanel sharedViewController] setImage:image];
-    [[FMFacebookPanel sharedViewController] present];
+```objectivec
+[[FMFacebookPanel sharedViewController] setText:text];
+[[FMFacebookPanel sharedViewController] setImage:image];
+[[FMFacebookPanel sharedViewController] present];
+```
 
 Credits
 -------
