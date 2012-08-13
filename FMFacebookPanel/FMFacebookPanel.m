@@ -72,8 +72,19 @@
 
 - (void)viewDidLoad
 {
-    [super viewDidLoad];    
-    self.nameLabel.text = @"";    
+    [super viewDidLoad];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applicationDidBecomeActive:)
+                                                 name:UIApplicationDidBecomeActiveNotification
+                                               object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(didRotate:)
+                                                 name:UIDeviceOrientationDidChangeNotification
+                                               object:nil];
+    
+    self.nameLabel.text = @"";
     
 	self.imageView.backgroundColor = [UIColor darkGrayColor];
 	self.imageView.layer.cornerRadius = 4.;
@@ -332,13 +343,8 @@
 			self.containerView.center = CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height - 352) / 2);
 		}
     }
-	[rootVC addChildViewController:self];
     [rootVC.view addSubview:self.view];
-
-    if ([rootVC isKindOfClass:[UINavigationController class]])
-    {
-        [self viewWillAppear:YES];
-    }
+    [self viewWillAppear:YES];
     
     [self.textView becomeFirstResponder];
     [UIView animateWithDuration:0.3
@@ -348,12 +354,14 @@
                          self.backgroundImageView.alpha = 1.;
                          self.containerView.transform = CGAffineTransformIdentity;
                      } completion:^(BOOL finished) {
-                         [self didMoveToParentViewController:rootVC];
+                         [self viewDidAppear:YES];
                      }];
 }
 
 - (void)dismiss
 {
+    [self viewWillDisappear:YES];
+    
     [self.textView resignFirstResponder];
     [UIView animateWithDuration:0.3
                           delay:0.0
@@ -363,7 +371,7 @@
 						 self.containerView.transform = CGAffineTransformMakeTranslation(0., -(self.containerView.center.y + CGRectGetHeight(self.containerView.frame)));
 					 } completion:^(BOOL finished) {
                          [self.view removeFromSuperview];
-                         [self removeFromParentViewController];
+                         [self viewDidDisappear:YES];
                      }];
 }
 
@@ -476,6 +484,30 @@
     }
     self.textView.frame = frame;
     [self.textView updateLines];
+}
+
+#pragma mark - Application Notifications
+
+- (void)applicationDidBecomeActive:(NSNotification *)notification
+{
+    [self.facebook extendAccessTokenIfNeeded];
+}
+
+- (void)didRotate:(NSNotification *)notification
+{
+	if (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad)
+    {
+		if (UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation))
+		{
+			self.containerView.center = CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height - 352) / 2);
+			self.backgroundImageView.image = [UIImage imageNamed:@"FBSheetVignetteLandscape.png"];
+		}
+		else
+		{
+			self.containerView.center = CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height - 264) / 2);
+			self.backgroundImageView.image = [UIImage imageNamed:@"FBSheetVignettePortrait.png"];
+		}
+    }
 }
 
 @end

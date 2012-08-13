@@ -22,12 +22,6 @@ static NSString * const kFacebookAppID = @"168546796612510";
     
     return YES;
 }
-							
-- (void)applicationDidBecomeActive:(UIApplication *)application
-{
-    //Use this to be sure the token is extended if needed
-    [[FMFacebookPanel sharedViewController].facebook extendAccessTokenIfNeeded];
-}
 
 - (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url
 {
