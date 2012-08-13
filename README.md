@@ -26,33 +26,24 @@ Installation
 Setup
 -----
 
-Setup the sharedViewController with your Facebook App ID
+1. Setup the sharedViewController with your Facebook App ID
 
-```objectivec
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-{
-    [[FMFacebookPanel sharedViewController] setup:kFacebookAppID];
-    return YES;
-}
-```
-  
-Extend the Facebook token in the `applicationDidBecomeActive:`
+	```objectivec
+	- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+	{
+    	[[FMFacebookPanel sharedViewController] setup:kFacebookAppID];
+    	return YES;
+	}
+	```
 
-```objectivec
-- (void)applicationDidBecomeActive:(UIApplication *)application
-{    
-    [[FMFacebookPanel sharedViewController].facebook extendAccessTokenIfNeeded];
-}
-```
+2. Let the Facebook property handle the url in the `application:handleOpenURL:`
 
-Let the Facebook property handle the url in the `application:handleOpenURL:`
-
-```objectivec
-- (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url
-{    
-    return [[FMFacebookPanel sharedViewController].facebook handleOpenURL:url];
-}
-```
+	```objectivec
+	- (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url
+	{    
+    	return [[FMFacebookPanel sharedViewController].facebook handleOpenURL:url];
+	}
+	```
 
 Usage
 -----
