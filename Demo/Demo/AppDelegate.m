@@ -16,17 +16,18 @@ static NSString * const kFacebookAppID = @"168546796612510";
 @synthesize window = _window;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-{
-    //Setup Facebook with your Facebook App ID
-    [[FMFacebookPanel sharedViewController] setup:kFacebookAppID];
-    
+{    
     return YES;
 }
 
-- (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url
+- (void)applicationWillTerminate:(UIApplication *)application
 {
-    //Let Facebook handle the open url
-    return [[FMFacebookPanel sharedViewController].facebook handleOpenURL:url];
+    [FBSession.activeSession close];
+}
+
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+{    
+    return [FBSession.activeSession handleOpenURL:url];
 }
 
 @end

@@ -27,38 +27,39 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "FBConnect.h"
+#import <FacebookSDK/FacebookSDK.h>
 
-@class LineTextView;
+@interface LineTextView : UITextView
 
-@interface FMFacebookPanel : UIViewController <FBSessionDelegate, FBRequestDelegate, UITextViewDelegate>
+@property (strong, nonatomic) UIColor *lineColor;
+@property (assign, nonatomic) CGFloat lineWidth;
+@property (assign, nonatomic) BOOL linesShouldFollowSuperview;
 
-@property (strong, nonatomic) UIImage *image;
-@property (strong, nonatomic) NSString *text;
-@property (strong, nonatomic) NSString *link;
+- (void)updateLines;
 
-@property (strong) Facebook *facebook;
-@property (strong, nonatomic) IBOutlet UIImageView *backgroundImageView;
-@property (strong, nonatomic) IBOutlet UIView *containerView;
-@property (strong, nonatomic) IBOutlet LineTextView *textView;
-@property (strong, nonatomic) IBOutlet UIImageView *imageView;
-@property (strong, nonatomic) IBOutlet UIImageView *clipImageView;
-@property (strong, nonatomic) IBOutlet UIImageView *chromeImageView;
-@property (strong, nonatomic) IBOutlet UILabel *nameTitleLabel;
-@property (strong, nonatomic) IBOutlet UILabel *nameLabel;
-@property (strong, nonatomic) IBOutlet UIButton *sendButton;
-@property (strong, nonatomic) IBOutlet UIButton *cancelButton;
-@property (strong, nonatomic) IBOutlet UIButton *logoutButton;
+@end
+
+@interface FMFacebookPanel : UIViewController <UITextViewDelegate>
+
+@property (strong, nonatomic) NSString *initialPostText;
+
+@property (strong, nonatomic) UIImage *postImage;
+@property (strong, nonatomic) NSString *postImageURL;
+@property (strong, nonatomic) NSString *postLink;
+@property (strong, nonatomic) NSString *postDescription;
+@property (strong, nonatomic) NSString *postCaption;
+@property (strong, nonatomic) NSString *postTitle;
+
+@property (strong, nonatomic) NSString *postRequestStartedMessage;
+@property (strong, nonatomic) NSString *postSuccessMessage;
+@property (strong, nonatomic) NSString *postErrorMessage;
+
+@property (strong, nonatomic) NSString *userInfoRequestStartedMessage;
+@property (strong, nonatomic) NSString *userInfoSuccessMessage;
+@property (strong, nonatomic) NSString *userInfoErrorMessage;
 
 + (FMFacebookPanel *)sharedViewController;
-- (void)setup:(NSString *)appID;
-- (void)setup:(NSString *)appID withUrlSchemeSuffix:(NSString *)suffix;
-- (void)requestuserInfo;
 - (void)present;
 - (void)dismiss;
-
-- (IBAction)cancel:(id)sender;
-- (IBAction)logout:(id)sender;
-- (IBAction)send:(id)sender;
 
 @end

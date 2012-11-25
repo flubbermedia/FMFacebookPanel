@@ -28,35 +28,103 @@
 
 #import "FMFacebookPanel.h"
 #import "SVProgressHUD.h"
-#import "LineTextView.h"
 #import <QuartzCore/QuartzCore.h>
+
+@interface LineTextView ()
+
+@property (strong) NSMutableArray *lines;
+
+@end
+
+@implementation LineTextView
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self)
+    {
+        _lines = [NSMutableArray new];
+        self.alwaysBounceVertical = YES;
+    }
+    return self;
+}
+
+#pragma mark - Properties
+
+- (void)setText:(NSString *)text
+{
+    [self updateLines];
+    [super setText:text];
+}
+
+- (void)setLineWidth:(CGFloat)lineWidth
+{
+    _lineWidth = lineWidth;
+    [self updateLines];
+}
+
+- (void)setLineColor:(UIColor *)lineColor
+{
+    _lineColor = lineColor;
+    [self updateLines];
+}
+
+#pragma mark - Lines utilites
+
+- (void)updateLines
+{
+    [_lines makeObjectsPerformSelector:@selector(removeFromSuperview)];
+	[_lines removeAllObjects];
+	
+    NSInteger numberOfLines = self.contentSize.height / self.font.lineHeight + 15;
+    CGFloat yOffset = 8.;
+    
+    for (int i = 1; i < numberOfLines; i++)
+    {
+        CGRect frame;
+        frame.origin.x = 0.;
+        frame.origin.y = self.font.lineHeight * i + yOffset;
+        frame.size.width = self.bounds.size.width;
+        frame.size.height = _lineWidth;
+        
+        if (_linesShouldFollowSuperview)
+        {
+            frame.origin.x = [self.superview convertPoint:CGPointZero toView:self].x;
+            frame.size.width = self.superview.bounds.size.width;
+        }
+        
+        UIView *line = [[UIView alloc] initWithFrame:frame];
+        line.backgroundColor = _lineColor;
+        
+        [self addSubview:line];
+        [_lines addObject:line];
+    }
+}
+
+@end
 
 @interface FMFacebookPanel ()
 
 @property (strong) FBRequest *userInfoRequest;
 @property (strong) FBRequest *postRequest;
 
+@property (strong, nonatomic) IBOutlet UIImageView *backgroundImageView;
+@property (strong, nonatomic) IBOutlet UIView *containerView;
+@property (strong, nonatomic) IBOutlet UIView *textViewContainer;
+@property (strong, nonatomic) IBOutlet LineTextView *textView;
+@property (strong, nonatomic) IBOutlet UIImageView *imageView;
+@property (strong, nonatomic) IBOutlet UIImageView *clipImageView;
+@property (strong, nonatomic) IBOutlet UIImageView *chromeImageView;
+@property (strong, nonatomic) IBOutlet UILabel *facebookLabel;
+@property (strong, nonatomic) IBOutlet UILabel *nameTitleLabel;
+@property (strong, nonatomic) IBOutlet UILabel *nameLabel;
+@property (strong, nonatomic) IBOutlet UIButton *sendButton;
+@property (strong, nonatomic) IBOutlet UIButton *cancelButton;
+@property (strong, nonatomic) IBOutlet UIButton *logoutButton;
+
 @end
 
 @implementation FMFacebookPanel
-
-@synthesize userInfoRequest;
-@synthesize postRequest;
-@synthesize facebook;
-@synthesize image;
-@synthesize text;
-@synthesize link;
-@synthesize backgroundImageView;
-@synthesize containerView;
-@synthesize textView;
-@synthesize imageView;
-@synthesize clipImageView;
-@synthesize chromeImageView;
-@synthesize nameTitleLabel;
-@synthesize nameLabel;
-@synthesize sendButton;
-@synthesize cancelButton;
-@synthesize logoutButton;
 
 + (FMFacebookPanel *)sharedViewController
 {
@@ -68,6 +136,28 @@
     return sharedViewController;
 }
 
+- (id)init
+{
+    self = [super init];
+    if (self)
+    {
+        FBSession.activeSession = [[FBSession alloc] init];
+        
+        _postRequestStartedMessage = NSLocalizedString(@"Posting to the wall", @"Facebook integration: Message displayed when the app tries to post a picture on the user's Facebook wall.");
+        _postSuccessMessage = @"";
+        _postErrorMessage = NSLocalizedString(@"Error while posting to the wall", @"Facebook integration: Message displayed when an error occured while trying to post a picture on the user's wall.");
+        
+        _userInfoRequestStartedMessage = NSLocalizedString(@"Requesting user name", @"Facebook integration: Message displayed when the app tries to retriew the user's username from Facebook.");
+        _userInfoSuccessMessage = @"";
+        _userInfoErrorMessage = NSLocalizedString(@"User Info error", @"Facebook integration: Message displayed when an error occured while trying to retrieve info about the user from Facebook.");
+        
+        _nameLabel = [UILabel new];
+        _textView = [LineTextView new];
+        _imageView = [UIImageView new];
+    }
+    return self;
+}
+
 #pragma mark - View lifecycle
 
 - (void)viewDidLoad
@@ -75,154 +165,189 @@
     [super viewDidLoad];
     
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(applicationDidBecomeActive:)
-                                                 name:UIApplicationDidBecomeActiveNotification
-                                               object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(didRotate:)
                                                  name:UIDeviceOrientationDidChangeNotification
                                                object:nil];
     
-    self.nameLabel.text = @"";
+    _backgroundImageView = [[UIImageView alloc] initWithFrame:self.view.bounds];
+    _backgroundImageView.image = [UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetVignettePortrait.png"];
+    _backgroundImageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    _backgroundImageView.alpha = 0.;
+    [self.view addSubview:_backgroundImageView];
     
-	self.imageView.backgroundColor = [UIColor darkGrayColor];
-	self.imageView.layer.cornerRadius = 4.;
-	
-	CGRect chromeImageRect = CGRectInset(self.imageView.frame, -6., -4.);
-	chromeImageRect = CGRectApplyAffineTransform(chromeImageRect, CGAffineTransformMakeTranslation(0., 2.));
-	self.chromeImageView = [[UIImageView alloc] initWithFrame:chromeImageRect];
-	self.chromeImageView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
-	self.chromeImageView.image = [[UIImage imageNamed:@"FBSheetImageBorderSquare.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(39., 41., 39., 42.)];	
-	[self.containerView insertSubview:self.chromeImageView aboveSubview:self.imageView];
-        
-    self.textView.delegate = self;
-    self.textView.font = [UIFont systemFontOfSize:17.];
-    self.textView.textColor = [UIColor blackColor];
-	self.textView.contentInset = UIEdgeInsetsMake(8., 0., 0., 0.);
-    self.textView.lineColor = [[UIColor lightGrayColor] colorWithAlphaComponent:0.2];
-    self.textView.lineWidth = 1.;
-    self.textView.linesShouldFollowSuperview = YES;
-
-	self.backgroundImageView.alpha = 0.;
-
-	// Background
-	self.containerView.layer.cornerRadius = 10.;
-	self.containerView.layer.backgroundColor = [UIColor whiteColor].CGColor;
-
-	UIView *paperView = [[UIView alloc] initWithFrame:self.containerView.bounds];
+    _containerView = [[UIView alloc] initWithFrame:CGRectMake(4., 21., 312., 222.)];
+    _containerView.backgroundColor = [UIColor clearColor];
+    _containerView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin;
+    _containerView.layer.cornerRadius = 10.;
+	_containerView.layer.backgroundColor = [UIColor whiteColor].CGColor;
+    _containerView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
+    [self.view addSubview:_containerView];
+    
+    UIView *paperView = [[UIView alloc] initWithFrame:_containerView.bounds];
 	paperView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-	paperView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"FBSheetPaperTexture.png"]];
-	
-	[self.containerView insertSubview:paperView atIndex:0];
-	
-	UIImageView *gradientImageView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"FBSheetBottomShadow.png"]];
+	paperView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetPaperTexture.png"]];
+    [_containerView addSubview:paperView];
+    
+    UIImageView *gradientImageView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetBottomShadow.png"]];
 	gradientImageView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-	gradientImageView.frame = self.containerView.bounds;
-	
-	[self.containerView insertSubview:gradientImageView aboveSubview:paperView];
-
-	UIView *dividerRedView = [[UIView alloc] initWithFrame:CGRectMake(0., 40., self.containerView.frame.size.width, 3.)];
+	gradientImageView.frame = _containerView.bounds;
+	[_containerView addSubview:gradientImageView];
+    
+    UIView *dividerRedView = [[UIView alloc] initWithFrame:CGRectMake(0., 40., _containerView.frame.size.width, 3.)];
 	dividerRedView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-	dividerRedView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"FBSheetRedPerf.png"]];
+	dividerRedView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetRedPerf.png"]];
+    [gradientImageView addSubview:dividerRedView];
 	
-	[self.containerView insertSubview:dividerRedView aboveSubview:gradientImageView];
-	
-	UIView *dividerGrayView = [[UIView alloc] initWithFrame:CGRectMake(0., 73., self.containerView.frame.size.width, 3.)];
+	UIView *dividerGrayView = [[UIView alloc] initWithFrame:CGRectMake(0., 73., _containerView.frame.size.width, 3.)];
 	dividerGrayView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-	dividerGrayView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"FBSheetGrayPerf.png"]];
-	
-	[self.containerView insertSubview:dividerGrayView aboveSubview:gradientImageView];
-
-	CGRect chromeRect = CGRectInset(self.containerView.bounds, -13., -34.);
+	dividerGrayView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetGrayPerf.png"]];
+    [gradientImageView addSubview:dividerGrayView];
+    
+    CGRect chromeRect = CGRectInset(_containerView.bounds, -13., -34.);
 	chromeRect = CGRectApplyAffineTransform(chromeRect, CGAffineTransformMakeTranslation(0., -1.));
 	UIImageView *chromeView = [[UIImageView alloc] initWithFrame:chromeRect];
 	chromeView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-	chromeView.image = [[UIImage imageNamed:@"FBSheetPaperChrome.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(64., 34., 64., 34.)];
-
-	[self.containerView insertSubview:chromeView aboveSubview:gradientImageView];
-	
-	self.containerView.transform = CGAffineTransformMakeTranslation(0., -(self.containerView.center.y + CGRectGetHeight(self.containerView.frame)));
-	
-	// Buttons
-	UIImage *cancelButtonImage = [[UIImage imageNamed:@"FBSheetCancelButton.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
-	UIImage *cancelButtonPressedImage = [[UIImage imageNamed:@"FBSheetCancelButtonPressed.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
-	[self.cancelButton setBackgroundImage:cancelButtonImage forState:UIControlStateNormal];
-	[self.cancelButton setBackgroundImage:cancelButtonPressedImage forState:UIControlStateHighlighted];
-
-	UIImage *sendButtonImage = [[UIImage imageNamed:@"FBSheetSendButton.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
-	UIImage *sendButtonPressedImage = [[UIImage imageNamed:@"FBSheetSendButtonPressed.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
-	[self.sendButton setBackgroundImage:sendButtonImage forState:UIControlStateNormal];
-	[self.sendButton setBackgroundImage:sendButtonPressedImage forState:UIControlStateHighlighted];
-
-	UIImage *logoutButtonImage = [[UIImage imageNamed:@"FBSheetCancelButton.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
-	UIImage *logoutButtonPressedImage = [[UIImage imageNamed:@"FBSheetCancelButtonPressed.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
-	[self.logoutButton setBackgroundImage:logoutButtonImage forState:UIControlStateNormal];
-	[self.logoutButton setBackgroundImage:logoutButtonPressedImage forState:UIControlStateHighlighted];
+	chromeView.image = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetPaperChrome.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(64., 34., 64., 34.)];
+    [gradientImageView addSubview:chromeView];
+    
+    _facebookLabel = [[UILabel alloc] initWithFrame:CGRectMake(101., 10., 110., 21.)];
+    _facebookLabel.text = @"Facebook";
+    _facebookLabel.textAlignment = UITextAlignmentCenter;
+    _facebookLabel.textColor = [UIColor  darkGrayColor];
+    _facebookLabel.font = [UIFont boldSystemFontOfSize:20.];
+    _facebookLabel.shadowColor = [UIColor whiteColor];
+    _facebookLabel.shadowOffset = CGSizeMake(0., -1.);
+    _facebookLabel.backgroundColor = [UIColor clearColor];
+    _facebookLabel.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin;
+    [_containerView addSubview:_facebookLabel];
+    
+    _cancelButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    _cancelButton.frame = CGRectMake(7., 6., 64., 30.);
+    _cancelButton.titleLabel.font = [UIFont boldSystemFontOfSize:12.];
+    _cancelButton.titleLabel.shadowOffset = CGSizeMake(0., 1.);
+    [_cancelButton setTitle:NSLocalizedString(@"Cancel", @"Facebook integration") forState:UIControlStateNormal];
+    [_cancelButton setTitleColor:[UIColor colorWithWhite:0.54 alpha:1.0] forState:UIControlStateNormal];
+    [_cancelButton setTitleShadowColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [_cancelButton addTarget:self action:@selector(dismiss) forControlEvents:UIControlEventTouchUpInside];
+    UIImage *cancelButtonImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetCancelButton.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
+	UIImage *cancelButtonPressedImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetCancelButtonPressed.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
+	[_cancelButton setBackgroundImage:cancelButtonImage forState:UIControlStateNormal];
+	[_cancelButton setBackgroundImage:cancelButtonPressedImage forState:UIControlStateHighlighted];
+    [_containerView addSubview:_cancelButton];
+    
+    _sendButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    _sendButton.frame = CGRectMake(250., 6., 54., 30.);
+    _sendButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
+    _sendButton.titleLabel.font = [UIFont boldSystemFontOfSize:12.];
+    _sendButton.titleLabel.shadowOffset = CGSizeMake(0., -1.);
+    [_sendButton setTitle:NSLocalizedString(@"Send", @"Facebook integration") forState:UIControlStateNormal];
+    [_sendButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [_sendButton setTitleShadowColor:[UIColor darkGrayColor] forState:UIControlStateNormal];
+    [_sendButton addTarget:self action:@selector(post) forControlEvents:UIControlEventTouchUpInside];
+    UIImage *sendButtonImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetSendButton.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
+	UIImage *sendButtonPressedImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetSendButtonPressed.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
+	[_sendButton setBackgroundImage:sendButtonImage forState:UIControlStateNormal];
+	[_sendButton setBackgroundImage:sendButtonPressedImage forState:UIControlStateHighlighted];
+    [_containerView addSubview:_sendButton];
+    
+    _nameTitleLabel = [[UILabel alloc] initWithFrame:CGRectMake(18., 48., 69., 21.)];
+    _nameTitleLabel.text = NSLocalizedString(@"Account:", @"Facebook integration");
+    _nameTitleLabel.font = [UIFont systemFontOfSize:17.];
+    _nameTitleLabel.textColor = [UIColor darkGrayColor];
+    _nameTitleLabel.shadowColor = [UIColor whiteColor];
+    _nameTitleLabel.shadowOffset = CGSizeMake(0., 1.);
+    _nameTitleLabel.backgroundColor = [UIColor clearColor];
+    [_containerView addSubview:_nameTitleLabel];
+    
+    _nameLabel.frame = CGRectMake(89., 48., 220., 21.);
+    _nameLabel.font = [UIFont systemFontOfSize:17.];
+    _nameLabel.textColor = [UIColor blackColor];
+    _nameLabel.shadowColor = [UIColor whiteColor];
+    _nameLabel.shadowOffset = CGSizeMake(0., 1.);
+    _nameLabel.backgroundColor = [UIColor clearColor];
+    _nameLabel.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleWidth;
+    [_containerView addSubview:_nameLabel];
+     
+    _textViewContainer = [[UIView alloc] initWithFrame:CGRectMake(5., 76., CGRectGetWidth(_containerView.frame) - 10., 110.)];
+    _textViewContainer.backgroundColor = [UIColor clearColor];
+    _textViewContainer.clipsToBounds = YES;
+    _textViewContainer.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    [_containerView addSubview:_textViewContainer];
+    
+    _textView.frame = CGRectMake(0., -10., CGRectGetWidth(_textViewContainer.frame), CGRectGetHeight(_textViewContainer.frame));
+    _textView.backgroundColor = [UIColor clearColor];
+    _textView.delegate = self;
+    _textView.font = [UIFont systemFontOfSize:17.];
+    _textView.textColor = [UIColor blackColor];
+	_textView.contentInset = UIEdgeInsetsMake(8., 0., 0., 0.);
+    _textView.lineColor = [[UIColor lightGrayColor] colorWithAlphaComponent:0.2];
+    _textView.lineWidth = 1.;
+    _textView.linesShouldFollowSuperview = YES;
+    _textView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    [_textViewContainer addSubview:_textView];
+    
+    _imageView.frame = CGRectMake(232., 97., 72., 72.);
+    _imageView.contentMode = UIViewContentModeScaleAspectFill;
+    _imageView.clipsToBounds = YES;
+    _imageView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
+    _imageView.backgroundColor = [UIColor darkGrayColor];
+	_imageView.layer.cornerRadius = 4.;
+    [_containerView addSubview:_imageView];
+    
+    CGRect chromeImageRect = CGRectInset(_imageView.frame, -6., -4.);
+	chromeImageRect = CGRectApplyAffineTransform(chromeImageRect, CGAffineTransformMakeTranslation(0., 2.));
+	_chromeImageView = [[UIImageView alloc] initWithFrame:chromeImageRect];
+	_chromeImageView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+	_chromeImageView.image = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetImageBorderSquare.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(39., 41., 39., 42.)];
+	[_containerView addSubview:_chromeImageView];
+    
+    _clipImageView = [[UIImageView alloc] initWithFrame:CGRectMake(239., 82., 79., 34.)];
+    _clipImageView.image = [UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetPaperClip.png"];
+    _clipImageView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
+    [_containerView addSubview:_clipImageView];
+    
+    _logoutButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    _logoutButton.frame = CGRectMake(7., 186., 64., 30.);
+    _logoutButton.titleLabel.font = [UIFont boldSystemFontOfSize:12.];
+    _logoutButton.titleLabel.shadowOffset = CGSizeMake(0., 1.);
+    _logoutButton.autoresizingMask = UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
+    [_logoutButton setTitle:NSLocalizedString(@"Logout", @"Facebook integration") forState:UIControlStateNormal];
+    [_logoutButton setTitleColor:[UIColor colorWithWhite:0.54 alpha:1.0] forState:UIControlStateNormal];
+    [_logoutButton setTitleShadowColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [_logoutButton addTarget:self action:@selector(logout) forControlEvents:UIControlEventTouchUpInside];
+    UIImage *logoutButtonImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetCancelButton.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
+	UIImage *logoutButtonPressedImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetCancelButtonPressed.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
+	[_logoutButton setBackgroundImage:logoutButtonImage forState:UIControlStateNormal];
+	[_logoutButton setBackgroundImage:logoutButtonPressedImage forState:UIControlStateHighlighted];
+    [_containerView addSubview:_logoutButton];
     
     if (![[UIApplication sharedApplication] isStatusBarHidden])
     {
         if ([UIApplication sharedApplication].keyWindow.rootViewController.wantsFullScreenLayout)
         {
-            self.containerView.center = CGPointMake(containerView.center.x, containerView.center.y+10.);
+            _containerView.center = CGPointMake(_containerView.center.x, _containerView.center.y+10.);
         }
         else
         {
-            self.containerView.center = CGPointMake(containerView.center.x, containerView.center.y-10.);
+            _containerView.center = CGPointMake(_containerView.center.x, _containerView.center.y-10.);
         }
     }
     
     [self showImageView:NO];
-}
-
-- (void)viewDidUnload
-{
-    [super viewDidUnload];
-    self.containerView = nil;
-    self.textView = nil;
-    self.imageView = nil;
-    self.sendButton = nil;
-    self.nameLabel = nil;
-}
-
-- (void)viewWillAppear:(BOOL)animated
-{
-    [super viewWillAppear:animated];
     
-    NSString *name = [[NSUserDefaults standardUserDefaults] objectForKey:@"facebook.name"];
-    
-    if (![self.facebook isSessionValid])
-    {
-        NSArray * permissions = [[NSArray alloc] initWithObjects:@"publish_stream", @"offline_access", nil];
-        [self.facebook authorize:permissions];
-    } 
-    else
-    {
-        if (!name.length)
-        {
-            [self requestuserInfo];
-        }
-        
-        [self.textView becomeFirstResponder];
-    }
-    
-    if (name.length)
-    {
-        self.nameLabel.text = name;
-    }
-    
-    self.imageView.image = self.image;
-    self.textView.text = self.text;
-    
-    [self showImageView:(self.image != nil)];
+    _containerView.transform = CGAffineTransformMakeTranslation(0., -(_containerView.center.y + CGRectGetHeight(_containerView.frame)));
 }
 
 - (void)viewDidDisappear:(BOOL)animated
 {
     [super viewDidDisappear:animated];
     
-    self.textView.text = @"";
-    self.nameLabel.text = @"";
+    _postImage = nil;
+    _postLink = nil;
+    _initialPostText = @"";
+    
+    _textView.text = @"";
+    _nameLabel.text = @"";
 }
 
 #pragma mark - Rotation
@@ -236,123 +361,35 @@
     return YES;
 }
 
-- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
-{
-	if (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad)
-    {		
-		if (UIInterfaceOrientationIsLandscape(self.interfaceOrientation))
-		{
-			self.containerView.center = CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height - 352) / 2);
-			self.backgroundImageView.image = [UIImage imageNamed:@"FBSheetVignetteLandscape.png"];
-		}
-		else
-		{
-			self.containerView.center = CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height - 264) / 2);
-			self.backgroundImageView.image = [UIImage imageNamed:@"FBSheetVignettePortrait.png"];
-		}
-		
-    }
-}
-
 #pragma mark - Public methods
-
-- (IBAction)cancel:(id)sender
-{
-    [self dismiss];
-}
-
-- (IBAction)logout:(id)sender
-{
-    self.nameLabel.text = @"";
-    [[NSUserDefaults standardUserDefaults] setObject:@"" forKey:@"facebook.name"];
-    [self.facebook logout];
-    [self dismiss];
-}
-
-- (IBAction)send:(id)sender
-{
-    [SVProgressHUD showWithStatus:NSLocalizedString(@"Posting to the wall", @"Facebook integration: Message displayed when the app tries to post a picture on the user's Facebook wall.") 
-                         maskType:SVProgressHUDMaskTypeGradient];
-    
-    NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:self.textView.text, @"message", nil];
-    NSString *graphPath = [NSString stringWithFormat:@"/me/feed?access_token=%@", self.facebook.accessToken];
-    
-    if (self.image)
-    {
-        [params setObject:self.image forKey:@"source"];
-		graphPath = [NSString stringWithFormat:@"/me/photos?access_token=%@", self.facebook.accessToken];
-    }
-	else if (self.link.length)
-    {
-        [params setObject:self.link forKey:@"link"];
-		graphPath = [NSString stringWithFormat:@"/me/links?access_token=%@", self.facebook.accessToken];        
-    }
-	
-	postRequest = [self.facebook requestWithGraphPath:graphPath
-                                            andParams:params 
-                                        andHttpMethod:@"POST" 
-                                          andDelegate:self];
-    
-    [self dismiss];
-}
-
-- (void)setup:(NSString *)appID
-{
-	[self setup:appID withUrlSchemeSuffix:nil];
-}
-
-- (void)setup:(NSString *)appID withUrlSchemeSuffix:(NSString *)suffix
-{
-    if (suffix)
-	{
-		self.facebook = [[Facebook alloc] initWithAppId:appID urlSchemeSuffix:suffix andDelegate:self];
-	}
-	else
-	{
-		self.facebook = [[Facebook alloc] initWithAppId:appID andDelegate:self];
-	}
-	
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    if ([defaults objectForKey:@"FBAccessTokenKey"] 
-        && [defaults objectForKey:@"FBExpirationDateKey"]) {
-        facebook.accessToken = [defaults objectForKey:@"FBAccessTokenKey"];
-        facebook.expirationDate = [defaults objectForKey:@"FBExpirationDateKey"];
-    }
-}
-
-- (void)requestuserInfo
-{
-    [SVProgressHUD showWithStatus:NSLocalizedString(@"Requesting user name", @"Facebook integration: Message displayed when the app tries to retriew the user's username from Facebook.")
-                         maskType:SVProgressHUDMaskTypeGradient];
-    
-    userInfoRequest = [self.facebook requestWithGraphPath:@"me" andDelegate:self];
-}
 
 - (void)present
 {
+    [self loginAndGetUserInfo];
+    
     UIViewController *rootVC = [UIApplication sharedApplication].keyWindow.rootViewController;
     self.view.frame = rootVC.view.bounds;
 	if (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad)
     {
-		CGRect containerFrame = self.containerView.frame;
+		CGRect containerFrame = _containerView.frame;
 		containerFrame.size.width = 540;
-		self.containerView.frame = containerFrame;
-		self.containerView.center = CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height - 264) / 2);
+		_containerView.frame = containerFrame;
+		_containerView.center = CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height - 264) / 2);
 		if (UIInterfaceOrientationIsLandscape(self.interfaceOrientation))
 		{
-			self.containerView.center = CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height - 352) / 2);
+			_containerView.center = CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height - 352) / 2);
 		}
     }
     [rootVC.view addSubview:self.view];
     [self viewWillAppear:YES];
     
-    [self.textView becomeFirstResponder];
+    [_textView becomeFirstResponder];
     [UIView animateWithDuration:0.3
                           delay:0.0
                         options:UIViewAnimationCurveEaseInOut
                      animations:^{
-                         self.backgroundImageView.alpha = 1.;
-                         self.containerView.transform = CGAffineTransformIdentity;
+                         _backgroundImageView.alpha = 1.;
+                         _containerView.transform = CGAffineTransformIdentity;
                      } completion:^(BOOL finished) {
                          [self viewDidAppear:YES];
                      }];
@@ -362,13 +399,13 @@
 {
     [self viewWillDisappear:YES];
     
-    [self.textView resignFirstResponder];
+    [_textView resignFirstResponder];
     [UIView animateWithDuration:0.3
                           delay:0.0
                         options:UIViewAnimationCurveEaseInOut
                      animations:^{
-                         self.backgroundImageView.alpha = 0.;
-						 self.containerView.transform = CGAffineTransformMakeTranslation(0., -(self.containerView.center.y + CGRectGetHeight(self.containerView.frame)));
+                         _backgroundImageView.alpha = 0.;
+						 _containerView.transform = CGAffineTransformMakeTranslation(0., -(_containerView.center.y + CGRectGetHeight(_containerView.frame)));
 					 } completion:^(BOOL finished) {
                          [self.view removeFromSuperview];
                          [self viewDidDisappear:YES];
@@ -377,121 +414,34 @@
 
 #pragma mark - Properties
 
-- (void)setImage:(UIImage *)newImage
+- (void)setImage:(UIImage *)image
 {
-    image = newImage;    
-    self.imageView.image = image;
+    _postImage = image;
     
-    [self showImageView:(self.image != nil)];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.imageView.image = image;
+        [self showImageView:(_postImage != nil)];
+    });
 }
 
-- (void)setText:(NSString *)newText
+- (void)setText:(NSString *)text
 {
-    text = newText;
-    self.textView.text = text;
-}
-
-#pragma mark - Facebook Session
-
-- (void)fbDidLogin
-{
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:[facebook accessToken] forKey:@"FBAccessTokenKey"];
-    [defaults setObject:[facebook expirationDate] forKey:@"FBExpirationDateKey"];
-    [defaults synchronize];
+    text = text;
     
-    [self requestuserInfo];
-}
-
-- (void)fbDidNotLogin:(BOOL)cancelled
-{
-	[self dismiss];
-}
-
--(void)fbDidExtendToken:(NSString *)accessToken expiresAt:(NSDate *)expiresAt
-{
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:accessToken forKey:@"FBAccessTokenKey"];
-    [defaults setObject:expiresAt forKey:@"FBExpirationDateKey"];
-    [defaults synchronize];
-}
-
-- (void)fbDidLogout
-{
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    if ([defaults objectForKey:@"FBAccessTokenKey"])
-    {
-        [defaults removeObjectForKey:@"FBAccessTokenKey"];
-        [defaults removeObjectForKey:@"FBExpirationDateKey"];
-        [defaults synchronize];
-    }
-}
-
-- (void)fbSessionInvalidated
-{
-    
-}
-
-#pragma mark - Facebook Request
-
-- (void)request:(FBRequest *)request didFailWithError:(NSError *)error
-{
-    if ([request isEqual:userInfoRequest]) {
-        [SVProgressHUD showErrorWithStatus:NSLocalizedString(@"User Info error", @"Facebook integration: Message displayed when an error occured while trying to retrieve info about the user from Facebook.")];
-    } else if ([request isEqual:postRequest]) {
-        [SVProgressHUD showErrorWithStatus:NSLocalizedString(@"Error while posting to the wall", @"Facebook integration: Message displayed when an error occured while trying to post a picture on the user's wall.")];
-    }
-}
-
-- (void)request:(FBRequest *)request didLoad:(id)result
-{
-    if ([request isEqual:userInfoRequest]) {
-        NSString *name = [result objectForKey:@"name"];
-        [[NSUserDefaults standardUserDefaults] setObject:name forKey:@"facebook.name"];
-        self.nameLabel.text = name;
-        [SVProgressHUD dismiss];
-        [self.textView becomeFirstResponder];
-    } else if ([request isEqual:postRequest]) {
-        [SVProgressHUD showSuccessWithStatus:NSLocalizedString(@"Post successfully submitted", @"Facebook integration: Message displayed when the picture is correctly posted on the user's wall.")];
-        [self performSelector:@selector(cancel:) withObject:nil afterDelay:0.6];
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        _textView.text = text;
+    });
 }
 
 #pragma mark - UITextViewDelegate
 
 - (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text
 {
-    [self.textView updateLines];
+    [_textView updateLines];
     return YES;
 }
 
-#pragma mark - Utilities
-
-- (void)showImageView:(BOOL)show
-{
-    self.imageView.hidden = !show;
-    self.clipImageView.hidden = !show;
-    self.chromeImageView.hidden = !show;
-    
-    CGRect frame = self.textView.frame;
-    if (show)
-    {
-        frame.size.width = CGRectGetMinX(self.imageView.frame) - (CGRectGetMinX(frame) * 2);
-    }
-    else
-    {
-        frame.size.width = CGRectGetMaxX(self.imageView.frame) - CGRectGetMinX(frame);
-    }
-    self.textView.frame = frame;
-    [self.textView updateLines];
-}
-
 #pragma mark - Application Notifications
-
-- (void)applicationDidBecomeActive:(NSNotification *)notification
-{
-    [self.facebook extendAccessTokenIfNeeded];
-}
 
 - (void)didRotate:(NSNotification *)notification
 {
@@ -499,15 +449,183 @@
     {
 		if (UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation))
 		{
-			self.containerView.center = CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height - 352) / 2);
-			self.backgroundImageView.image = [UIImage imageNamed:@"FBSheetVignetteLandscape.png"];
+			_containerView.center = CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height - 352) / 2);
+			_backgroundImageView.image = [UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetVignetteLandscape.png"];
 		}
 		else
 		{
-			self.containerView.center = CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height - 264) / 2);
-			self.backgroundImageView.image = [UIImage imageNamed:@"FBSheetVignettePortrait.png"];
+			_containerView.center = CGPointMake(self.view.bounds.size.width / 2, (self.view.bounds.size.height - 264) / 2);
+			_backgroundImageView.image = [UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetVignettePortrait.png"];
 		}
     }
+}
+
+#pragma mark - Utilities
+
+- (void)loginAndGetUserInfo
+{
+    __block NSString *name = [[NSUserDefaults standardUserDefaults] objectForKey:@"facebook.name"];
+    
+    if (!FBSession.activeSession.isOpen)
+    {
+        [self openSession:^(FBSession *session, FBSessionState status, NSError *error) {            
+            if (error == nil)
+            {
+                if (!name.length)
+                {
+                    if (status == FBSessionStateOpen)
+                    {
+                        [self requestUserInfo];
+                    }
+                }
+                else
+                {
+                    _nameLabel.text = name;
+                }
+                
+                [_textView becomeFirstResponder];
+            }
+            else
+            {
+            }
+        }];
+    }
+    
+    if (name.length)
+    {
+        _nameLabel.text = name;
+    }
+    
+    _imageView.image = _postImage;
+    _textView.text = _initialPostText;
+    
+    [self showImageView:(_postImage != nil)];
+}
+
+- (void)logout
+{
+    _nameLabel.text = @"";
+    [[NSUserDefaults standardUserDefaults] setObject:@"" forKey:@"facebook.name"];
+    [FBSession.activeSession closeAndClearTokenInformation];
+    [self dismiss];
+}
+
+- (void)post
+{
+    [SVProgressHUD showWithStatus:_postRequestStartedMessage maskType:SVProgressHUDMaskTypeGradient];
+    
+    [self openSession:^(FBSession *session, FBSessionState status, NSError *error) {
+        [self post:^(BOOL succeded) {
+            if (succeded)
+            {
+                [SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
+            }
+            else
+            {
+                [SVProgressHUD showErrorWithStatus:_postErrorMessage];
+            }
+        }];
+    }];
+    
+    [self dismiss];
+}
+
+- (void)requestUserInfo
+{
+    [SVProgressHUD showWithStatus:_userInfoRequestStartedMessage maskType:SVProgressHUDMaskTypeGradient];
+    
+    [self openSession:^(FBSession *session, FBSessionState status, NSError *error) {
+        [self userInfo:^(NSDictionary<FBGraphUser> *user) {
+            
+            if (user.name)
+            {
+                [[NSUserDefaults standardUserDefaults] setObject:user.name forKey:@"facebook.name"];
+                _nameLabel.text = user.name;
+                [SVProgressHUD showSuccessWithStatus:_userInfoSuccessMessage];
+                [_textView becomeFirstResponder];
+            }
+            else
+            {
+                [SVProgressHUD showErrorWithStatus:_userInfoErrorMessage];
+            }
+            
+        }];
+    }];
+}
+
+- (void)showImageView:(BOOL)show
+{
+    _imageView.hidden = !show;
+    _clipImageView.hidden = !show;
+    _chromeImageView.hidden = !show;
+    
+    CGRect frame = _textViewContainer.frame;
+    if (show)
+    {
+        frame.size.width = CGRectGetMinX(_imageView.frame) - 10.;
+    }
+    else
+    {
+        frame.size.width = CGRectGetWidth(_containerView.frame) - 10.;
+    }
+    _textViewContainer.frame = frame;
+    [_textView updateLines];
+}
+
+#pragma mark - Facebook utilities
+
+- (void)openSession:(void (^)(FBSession *session, FBSessionState status, NSError *error))completion
+{
+    if (!FBSession.activeSession.isOpen)
+    {
+        [FBSession openActiveSessionWithPublishPermissions:@[@"publish_actions"] defaultAudience:FBSessionDefaultAudienceEveryone allowLoginUI:YES completionHandler:
+         ^(FBSession *session, FBSessionState status, NSError *error){
+             completion(session, status, error);
+         }];
+    }
+    else
+    {
+        completion(FBSession.activeSession, FBSession.activeSession.state, nil);
+    }
+}
+
+- (void)userInfo:(void (^)(NSDictionary<FBGraphUser> *user))completion
+{
+    [self openSession:^(FBSession *session, FBSessionState status, NSError *error) {
+        if (status == FBSessionStateOpen)
+        {
+            [[FBRequest requestForMe] startWithCompletionHandler:
+             ^(FBRequestConnection *connection, NSDictionary<FBGraphUser> *user, NSError *error) {
+                 completion(user);
+             }];
+        }
+    }];
+}
+
+- (void)post:(void (^)(BOOL succeded))completion
+{
+    NSMutableDictionary *parameters = [NSMutableDictionary new];    
+    if (_postTitle) [parameters setObject:_postTitle forKey:@"name"];
+    if (_postCaption) [parameters setObject:_postCaption forKey:@"caption"];
+    if (_postDescription) [parameters setObject:_postDescription forKey:@"description"];
+    if (_postImageURL) [parameters setObject:_postImageURL forKey:@"picture"];
+    if (_postLink) [parameters setObject:_postLink forKey:@"link"];
+    if (_textView.text) [parameters setObject:_textView.text forKey:@"message"];
+    
+    [SVProgressHUD showWithStatus:_postRequestStartedMessage maskType:SVProgressHUDMaskTypeClear];
+    [[FBRequest requestWithGraphPath:@"me/feed" parameters:parameters HTTPMethod:@"POST"] startWithCompletionHandler:
+     ^(FBRequestConnection *connection, id result, NSError *error) {
+        if (error == nil)
+        {
+            [SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
+            completion(YES);
+        }
+        else
+        {
+            [SVProgressHUD showErrorWithStatus:_postErrorMessage];
+            completion(NO);
+        }
+    }];
 }
 
 @end

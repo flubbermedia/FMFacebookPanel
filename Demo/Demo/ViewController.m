@@ -38,21 +38,17 @@
 
 - (IBAction)didTapShareImage:(id)sender
 {
-    NSString *text = @"Sharing images is very easy";
-    UIImage *image = [UIImage imageNamed:@"Flubber.png"];
     
-    [[FMFacebookPanel sharedViewController] setText:text];
-    [[FMFacebookPanel sharedViewController] setImage:image];
-    [[FMFacebookPanel sharedViewController] present];
 }
 
 - (IBAction)didTapShareLink:(id)sender
 {
-    NSString *text = @"Sharing links is very easy";
-    NSString *link = @"http://flubbermedia.com";
-    
-    [[FMFacebookPanel sharedViewController] setText:text];
-    [[FMFacebookPanel sharedViewController] setLink:link];
+    [FMFacebookPanel sharedViewController].postTitle = @"My link sharing";
+    [FMFacebookPanel sharedViewController].postCaption = @"This is the best link sharing ever";
+    [FMFacebookPanel sharedViewController].postDescription = @"I'd like to describe my link sharing, it's so wow!";
+    //[FMFacebookPanel sharedViewController].postImageURL = @"";
+    [FMFacebookPanel sharedViewController].postLink = @"http://flubbermedia.com";
+    [FMFacebookPanel sharedViewController].initialPostText = @"Type your thought here";
     [[FMFacebookPanel sharedViewController] present];
 }
 
