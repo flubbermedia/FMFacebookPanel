@@ -330,6 +330,8 @@
 
 - (void)present
 {
+    _isVisible = YES;
+    
     UIViewController *rootVC = [UIApplication sharedApplication].keyWindow.rootViewController;
     self.view.frame = rootVC.view.bounds;
 	if (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad)
@@ -360,6 +362,8 @@
 
 - (void)dismiss
 {
+    _isVisible = NO;
+    
     [self viewWillDisappear:YES];
     
     [self.textView resignFirstResponder];

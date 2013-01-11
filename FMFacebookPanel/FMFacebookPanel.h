@@ -49,6 +49,7 @@
 @property (strong, nonatomic) IBOutlet UIButton *sendButton;
 @property (strong, nonatomic) IBOutlet UIButton *cancelButton;
 @property (strong, nonatomic) IBOutlet UIButton *logoutButton;
+@property (assign, nonatomic) BOOL isVisible;
 
 + (FMFacebookPanel *)sharedViewController;
 - (void)setup:(NSString *)appID;
