@@ -13,27 +13,27 @@
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone) {
-        return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
-    } else {
-        return YES;
-    }
+	if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone) {
+		return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
+	} else {
+		return YES;
+	}
 }
 
 #pragma mark - Actions
 
 - (IBAction)didTapShareImage:(id)sender
 {
-    [FMFacebookPanel sharedViewController].postImage = [UIImage imageNamed:@"Flubber.png"];
-    [FMFacebookPanel sharedViewController].postText = @"Type your thought here";
-    [[FMFacebookPanel sharedViewController] present];
+	[FMFacebookPanel sharedViewController].postText = @"Image text here";
+	[FMFacebookPanel sharedViewController].postImage = [UIImage imageNamed:@"Flubber.png"];
+	[[FMFacebookPanel sharedViewController] present];
 }
 
 - (IBAction)didTapShareLink:(id)sender
 {
-    [FMFacebookPanel sharedViewController].postLink = @"http://flubbermedia.com";
-    [FMFacebookPanel sharedViewController].postText = @"Type your thought here";
-    [[FMFacebookPanel sharedViewController] present];
+	[FMFacebookPanel sharedViewController].postText = @"Link text here";
+	[FMFacebookPanel sharedViewController].postLink = @"http://flubbermedia.com";
+	[[FMFacebookPanel sharedViewController] present];
 }
 
 @end

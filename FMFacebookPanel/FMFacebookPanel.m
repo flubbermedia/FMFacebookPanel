@@ -498,10 +498,12 @@ typedef enum {
 																	 [SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
 																 } else {
 																	 [SVProgressHUD showErrorWithStatus:_postErrorMessage];
+																	 NSLog(@"Facebook Publish error1: %@", error);
 																 }
 															 }];
 														 } else {
 															 [SVProgressHUD showErrorWithStatus:_postErrorMessage];
+															 NSLog(@"Facebook Permission error1: %@", error);
 														 }
 													 }];
 		} else {
@@ -510,6 +512,7 @@ typedef enum {
 					[SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
 				} else {
 					[SVProgressHUD showErrorWithStatus:_postErrorMessage];
+					NSLog(@"Facebook Publish error2: %@", error);
 				}
 			}];
 		}
@@ -524,10 +527,12 @@ typedef enum {
 												  [SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
 											  } else {
 												  [SVProgressHUD showErrorWithStatus:_postErrorMessage];
+												  NSLog(@"Facebook Publish error3: %@", error);
 											  }
 										  }];
 									  } else {
 										  [SVProgressHUD showErrorWithStatus:_postErrorMessage];
+										  NSLog(@"Facebook Session error1: %@", error);
 									  }
 								  }];
 	}
@@ -554,7 +559,7 @@ typedef enum {
 			break;
 	}
 	
-	[FBRequestConnection startWithGraphPath:@"me/feed"
+	[FBRequestConnection startWithGraphPath:graphPath
 								 parameters:params
 								 HTTPMethod:@"POST"
 						  completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
