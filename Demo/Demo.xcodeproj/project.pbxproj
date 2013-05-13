@@ -378,7 +378,6 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../3dParty\"",
 					"\"$(SRCROOT)/Demo\"",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -394,7 +393,6 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../3dParty\"",
 					"\"$(SRCROOT)/Demo\"",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
