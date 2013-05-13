@@ -148,9 +148,10 @@ typedef enum {
 	{
 		_postType = PostTypeText;
 		
-		_postRequestStartedMessage = NSLocalizedString(@"Posting to the wall", @"Facebook integration: Message displayed when the app tries to post a picture on the user's Facebook wall.");
-		_postSuccessMessage = @"";
-		_postErrorMessage = NSLocalizedString(@"Error while posting to the wall", @"Facebook integration: Message displayed when an error occured while trying to post a picture on the user's wall.");
+		_postRequestStartedMessage = NSLocalizedString(@"Posting to Facebook", @"Facebook integration: Message displayed when the app tries to post a picture on the user's Facebook wall.");
+		_postRequestSucceedMessage = @"";
+		_postRequestErrorMessage = NSLocalizedString(@"Error posting to Facebook", @"Facebook integration: Message displayed when an error occured while trying to post a picture on the user's wall.");
+		_postAuthenticationErrorMessage = NSLocalizedString(@"Error authenticating User", @"Facebook integration: Message displayed when an error occured while trying to authenticate the user.");
 		
 		_textView = [LineTextView new];
 		_imageView = [UIImageView new];
@@ -484,39 +485,37 @@ typedef enum {
 - (void)post
 {
 	[SVProgressHUD showWithStatus:_postRequestStartedMessage maskType:SVProgressHUDMaskTypeGradient];
-	
-	NSArray *permissions = [NSArray arrayWithObject:@"publish_actions"];
     
     void (^publishStoryBlock)(FBRequestConnection *, id, NSError *) = ^(FBRequestConnection *connection, id result, NSError *error) {
         if (!error) {
-            [SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
+            [SVProgressHUD showSuccessWithStatus:_postRequestSucceedMessage];
         } else {
-            [SVProgressHUD showErrorWithStatus:_postErrorMessage];
-            NSLog(@"Facebook Publish error2: %@", error);
+            [SVProgressHUD showErrorWithStatus:_postRequestErrorMessage];
         }
     };
+
+	NSArray *permissions = @[@"publish_actions"];
+	NSDictionary *storyParams = @{@"message": _textView.text, @"link": _postLink, @"source": _postImage, @"postType": @(_postType)};
 	
 	if (FBSession.activeSession.isOpen) {
 		if ([FBSession.activeSession.permissions indexOfObject:@"publish_actions"] == NSNotFound) {
 			[FBSession.activeSession reauthorizeWithPublishPermissions:permissions defaultAudience:FBSessionDefaultAudienceFriends completionHandler:^(FBSession *session, NSError *error) {
                 if (!error) {
-                    [self publishStory:nil completion:publishStoryBlock];
+                    [self publishStory:storyParams completion:publishStoryBlock];
                 } else {
-                    [SVProgressHUD showErrorWithStatus:_postErrorMessage];
-                    NSLog(@"Facebook Permission error1: %@", error);
+                    [SVProgressHUD showErrorWithStatus:_postAuthenticationErrorMessage];
                 }
             }];
 		} else {
-			[self publishStory:nil completion:publishStoryBlock];
+			[self publishStory:storyParams completion:publishStoryBlock];
 		}
 		
 	} else {
 		[FBSession openActiveSessionWithPermissions:permissions allowLoginUI:YES completionHandler:^(FBSession *session, FBSessionState status, NSError *error) {
             if (!error) {
-                [self publishStory:nil completion:publishStoryBlock];
+                [self publishStory:storyParams completion:publishStoryBlock];
             } else {
-                [SVProgressHUD showErrorWithStatus:_postErrorMessage];
-                NSLog(@"Facebook Session error1: %@", error);
+                [SVProgressHUD showErrorWithStatus:_postAuthenticationErrorMessage];
             }
         }];
 	}
@@ -524,31 +523,24 @@ typedef enum {
 	[self dismiss];
 }
 
-- (void)publishStory:(NSDictionary *)params completion:(void (^)(FBRequestConnection *connection, id result, NSError *error))completion
+- (void)publishStory:(NSDictionary *)story completion:(void (^)(FBRequestConnection *connection, id result, NSError *error))completion
 {
-	//NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:_textView.text, @"message", nil];
-	
 	NSString *graphPath = @"/me/feed";
 	
-	switch (_postType) {
+	switch ([story[@"postType"] intValue]) {
 		case PostTypeImage:
-			//[params setObject:_postImage forKey:@"source"];
 			graphPath = @"/me/photos";
 			break;
 		case PostTypeLink:
-			//[params setObject:_postLink forKey:@"link"];
 			graphPath = @"/me/links";
 			break;
 		default:
 			break;
 	}
 	
-	[FBRequestConnection startWithGraphPath:graphPath
-								 parameters:params
-								 HTTPMethod:@"POST"
-						  completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
-							  completion(connection, result, error);
-						  }];
+	[FBRequestConnection startWithGraphPath:graphPath parameters:story HTTPMethod:@"POST" completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
+		completion(connection, result, error);
+	}];
 }
 
 @end

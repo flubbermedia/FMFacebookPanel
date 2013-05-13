@@ -46,8 +46,9 @@
 @property (strong, nonatomic) NSString *postLink;
 
 @property (strong, nonatomic) NSString *postRequestStartedMessage;
-@property (strong, nonatomic) NSString *postSuccessMessage;
-@property (strong, nonatomic) NSString *postErrorMessage;
+@property (strong, nonatomic) NSString *postRequestSucceedMessage;
+@property (strong, nonatomic) NSString *postRequestErrorMessage;
+@property (strong, nonatomic) NSString *postAuthenticationErrorMessage;
 
 + (FMFacebookPanel *)sharedViewController;
 - (void)present;
