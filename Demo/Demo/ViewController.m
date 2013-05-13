@@ -9,21 +9,7 @@
 #import "ViewController.h"
 #import "FMFacebookPanel.h"
 
-@interface ViewController ()
-
-@end
-
 @implementation ViewController
-
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-}
-
-- (void)viewDidUnload
-{
-    [super viewDidUnload];
-}
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
@@ -38,17 +24,15 @@
 
 - (IBAction)didTapShareImage:(id)sender
 {
-    
+    [FMFacebookPanel sharedViewController].postImage = [UIImage imageNamed:@"Flubber.png"];
+    [FMFacebookPanel sharedViewController].postText = @"Type your thought here";
+    [[FMFacebookPanel sharedViewController] present];
 }
 
 - (IBAction)didTapShareLink:(id)sender
 {
-    [FMFacebookPanel sharedViewController].postTitle = @"My link sharing";
-    [FMFacebookPanel sharedViewController].postCaption = @"This is the best link sharing ever";
-    [FMFacebookPanel sharedViewController].postDescription = @"I'd like to describe my link sharing, it's so wow!";
-    //[FMFacebookPanel sharedViewController].postImageURL = @"";
     [FMFacebookPanel sharedViewController].postLink = @"http://flubbermedia.com";
-    [FMFacebookPanel sharedViewController].initialPostText = @"Type your thought here";
+    [FMFacebookPanel sharedViewController].postText = @"Type your thought here";
     [[FMFacebookPanel sharedViewController] present];
 }
 
