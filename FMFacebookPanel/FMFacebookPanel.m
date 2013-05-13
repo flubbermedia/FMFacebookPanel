@@ -486,73 +486,57 @@ typedef enum {
 	[SVProgressHUD showWithStatus:_postRequestStartedMessage maskType:SVProgressHUDMaskTypeGradient];
 	
 	NSArray *permissions = [NSArray arrayWithObject:@"publish_actions"];
+    
+    void (^publishStoryBlock)(FBRequestConnection *, id, NSError *) = ^(FBRequestConnection *connection, id result, NSError *error) {
+        if (!error) {
+            [SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
+        } else {
+            [SVProgressHUD showErrorWithStatus:_postErrorMessage];
+            NSLog(@"Facebook Publish error2: %@", error);
+        }
+    };
 	
 	if (FBSession.activeSession.isOpen) {
 		if ([FBSession.activeSession.permissions indexOfObject:@"publish_actions"] == NSNotFound) {
-			[FBSession.activeSession reauthorizeWithPublishPermissions:permissions
-													   defaultAudience:FBSessionDefaultAudienceFriends
-													 completionHandler:^(FBSession *session, NSError *error) {
-														 if (!error) {
-															 [self publishStory:^(FBRequestConnection *connection, id result, NSError *error) {
-																 if (!error) {
-																	 [SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
-																 } else {
-																	 [SVProgressHUD showErrorWithStatus:_postErrorMessage];
-																	 NSLog(@"Facebook Publish error1: %@", error);
-																 }
-															 }];
-														 } else {
-															 [SVProgressHUD showErrorWithStatus:_postErrorMessage];
-															 NSLog(@"Facebook Permission error1: %@", error);
-														 }
-													 }];
+			[FBSession.activeSession reauthorizeWithPublishPermissions:permissions defaultAudience:FBSessionDefaultAudienceFriends completionHandler:^(FBSession *session, NSError *error) {
+                if (!error) {
+                    [self publishStory:nil completion:publishStoryBlock];
+                } else {
+                    [SVProgressHUD showErrorWithStatus:_postErrorMessage];
+                    NSLog(@"Facebook Permission error1: %@", error);
+                }
+            }];
 		} else {
-			[self publishStory:^(FBRequestConnection *connection, id result, NSError *error) {
-				if (!error) {
-					[SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
-				} else {
-					[SVProgressHUD showErrorWithStatus:_postErrorMessage];
-					NSLog(@"Facebook Publish error2: %@", error);
-				}
-			}];
+			[self publishStory:nil completion:publishStoryBlock];
 		}
 		
 	} else {
-		[FBSession openActiveSessionWithPermissions:permissions
-									   allowLoginUI:YES
-								  completionHandler:^(FBSession *session, FBSessionState status, NSError *error) {
-									  if (!error) {
-										  [self publishStory:^(FBRequestConnection *connection, id result, NSError *error) {
-											  if (!error) {
-												  [SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
-											  } else {
-												  [SVProgressHUD showErrorWithStatus:_postErrorMessage];
-												  NSLog(@"Facebook Publish error3: %@", error);
-											  }
-										  }];
-									  } else {
-										  [SVProgressHUD showErrorWithStatus:_postErrorMessage];
-										  NSLog(@"Facebook Session error1: %@", error);
-									  }
-								  }];
+		[FBSession openActiveSessionWithPermissions:permissions allowLoginUI:YES completionHandler:^(FBSession *session, FBSessionState status, NSError *error) {
+            if (!error) {
+                [self publishStory:nil completion:publishStoryBlock];
+            } else {
+                [SVProgressHUD showErrorWithStatus:_postErrorMessage];
+                NSLog(@"Facebook Session error1: %@", error);
+            }
+        }];
 	}
 	
 	[self dismiss];
 }
 
-- (void)publishStory:(void (^)(FBRequestConnection *connection, id result, NSError *error))completion
+- (void)publishStory:(NSDictionary *)params completion:(void (^)(FBRequestConnection *connection, id result, NSError *error))completion
 {
-	NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:_textView.text, @"message", nil];
+	//NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:_textView.text, @"message", nil];
 	
 	NSString *graphPath = @"/me/feed";
 	
 	switch (_postType) {
 		case PostTypeImage:
-			[params setObject:_postImage forKey:@"source"];
+			//[params setObject:_postImage forKey:@"source"];
 			graphPath = @"/me/photos";
 			break;
 		case PostTypeLink:
-			[params setObject:_postLink forKey:@"link"];
+			//[params setObject:_postLink forKey:@"link"];
 			graphPath = @"/me/links";
 			break;
 		default:
