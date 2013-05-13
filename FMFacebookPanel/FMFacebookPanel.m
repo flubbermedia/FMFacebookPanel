@@ -342,6 +342,8 @@ typedef enum {
 
 - (void)present
 {
+	[FBSession openActiveSessionWithAllowLoginUI:NO];
+	
 	UIViewController *rootVC = [UIApplication sharedApplication].keyWindow.rootViewController;
 	self.view.frame = rootVC.view.bounds;
 	if (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad)
