@@ -386,7 +386,7 @@
     [_textView becomeFirstResponder];
     [UIView animateWithDuration:0.3
                           delay:0.0
-                        options:UIViewAnimationCurveEaseInOut
+                        options:UIViewAnimationOptionCurveEaseInOut
                      animations:^{
                          _backgroundImageView.alpha = 1.;
                          _containerView.transform = CGAffineTransformIdentity;
@@ -402,7 +402,7 @@
     [_textView resignFirstResponder];
     [UIView animateWithDuration:0.3
                           delay:0.0
-                        options:UIViewAnimationCurveEaseInOut
+                        options:UIViewAnimationOptionCurveEaseInOut
                      animations:^{
                          _backgroundImageView.alpha = 0.;
 						 _containerView.transform = CGAffineTransformMakeTranslation(0., -(_containerView.center.y + CGRectGetHeight(_containerView.frame)));
