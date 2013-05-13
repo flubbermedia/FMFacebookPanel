@@ -141,9 +141,7 @@
     self = [super init];
     if (self)
     {
-        FBSession.activeSession = [[FBSession alloc] init];
-        
-        _postRequestStartedMessage = NSLocalizedString(@"Posting to the wall", @"Facebook integration: Message displayed when the app tries to post a picture on the user's Facebook wall.");
+		_postRequestStartedMessage = NSLocalizedString(@"Posting to the wall", @"Facebook integration: Message displayed when the app tries to post a picture on the user's Facebook wall.");
         _postSuccessMessage = @"";
         _postErrorMessage = NSLocalizedString(@"Error while posting to the wall", @"Facebook integration: Message displayed when an error occured while trying to post a picture on the user's wall.");
         
@@ -151,7 +149,6 @@
         _userInfoSuccessMessage = @"";
         _userInfoErrorMessage = NSLocalizedString(@"User Info error", @"Facebook integration: Message displayed when an error occured while trying to retrieve info about the user from Facebook.");
         
-        _nameLabel = [UILabel new];
         _textView = [LineTextView new];
         _imageView = [UIImageView new];
     }
@@ -163,6 +160,16 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+	
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(applicationDidBecomeActive:)
+												 name:UIApplicationDidBecomeActiveNotification
+											   object:nil];
+	
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(applicationWillTerminate:)
+												 name:UIApplicationWillTerminateNotification
+											   object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(didRotate:)
@@ -249,25 +256,7 @@
 	[_sendButton setBackgroundImage:sendButtonImage forState:UIControlStateNormal];
 	[_sendButton setBackgroundImage:sendButtonPressedImage forState:UIControlStateHighlighted];
     [_containerView addSubview:_sendButton];
-    
-    _nameTitleLabel = [[UILabel alloc] initWithFrame:CGRectMake(18., 48., 69., 21.)];
-    _nameTitleLabel.text = NSLocalizedString(@"Account:", @"Facebook integration");
-    _nameTitleLabel.font = [UIFont systemFontOfSize:17.];
-    _nameTitleLabel.textColor = [UIColor darkGrayColor];
-    _nameTitleLabel.shadowColor = [UIColor whiteColor];
-    _nameTitleLabel.shadowOffset = CGSizeMake(0., 1.);
-    _nameTitleLabel.backgroundColor = [UIColor clearColor];
-    [_containerView addSubview:_nameTitleLabel];
-    
-    _nameLabel.frame = CGRectMake(89., 48., 220., 21.);
-    _nameLabel.font = [UIFont systemFontOfSize:17.];
-    _nameLabel.textColor = [UIColor blackColor];
-    _nameLabel.shadowColor = [UIColor whiteColor];
-    _nameLabel.shadowOffset = CGSizeMake(0., 1.);
-    _nameLabel.backgroundColor = [UIColor clearColor];
-    _nameLabel.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleWidth;
-    [_containerView addSubview:_nameLabel];
-     
+	
     _textViewContainer = [[UIView alloc] initWithFrame:CGRectMake(5., 76., CGRectGetWidth(_containerView.frame) - 10., 110.)];
     _textViewContainer.backgroundColor = [UIColor clearColor];
     _textViewContainer.clipsToBounds = YES;
@@ -306,21 +295,6 @@
     _clipImageView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
     [_containerView addSubview:_clipImageView];
     
-    _logoutButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    _logoutButton.frame = CGRectMake(7., 186., 64., 30.);
-    _logoutButton.titleLabel.font = [UIFont boldSystemFontOfSize:12.];
-    _logoutButton.titleLabel.shadowOffset = CGSizeMake(0., 1.);
-    _logoutButton.autoresizingMask = UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
-    [_logoutButton setTitle:NSLocalizedString(@"Logout", @"Facebook integration") forState:UIControlStateNormal];
-    [_logoutButton setTitleColor:[UIColor colorWithWhite:0.54 alpha:1.0] forState:UIControlStateNormal];
-    [_logoutButton setTitleShadowColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [_logoutButton addTarget:self action:@selector(logout) forControlEvents:UIControlEventTouchUpInside];
-    UIImage *logoutButtonImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetCancelButton.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
-	UIImage *logoutButtonPressedImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetCancelButtonPressed.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0., 5., 0., 5.)];
-	[_logoutButton setBackgroundImage:logoutButtonImage forState:UIControlStateNormal];
-	[_logoutButton setBackgroundImage:logoutButtonPressedImage forState:UIControlStateHighlighted];
-    [_containerView addSubview:_logoutButton];
-    
     if (![[UIApplication sharedApplication] isStatusBarHidden])
     {
         if ([UIApplication sharedApplication].keyWindow.rootViewController.wantsFullScreenLayout)
@@ -347,7 +321,6 @@
     _initialPostText = @"";
     
     _textView.text = @"";
-    _nameLabel.text = @"";
 }
 
 #pragma mark - Rotation
@@ -365,8 +338,7 @@
 
 - (void)present
 {
-    [self loginAndGetUserInfo];
-    
+	
     UIViewController *rootVC = [UIApplication sharedApplication].keyWindow.rootViewController;
     self.view.frame = rootVC.view.bounds;
 	if (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad)
@@ -443,6 +415,16 @@
 
 #pragma mark - Application Notifications
 
+- (void)applicationDidBecomeActive:(NSNotification *)notification
+{
+    [FBAppCall handleDidBecomeActive];
+}
+
+- (void)applicationWillTerminate:(NSNotification *)notification
+{
+    [FBSession.activeSession close];
+}
+
 - (void)didRotate:(NSNotification *)notification
 {
 	if (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad)
@@ -461,97 +443,6 @@
 }
 
 #pragma mark - Utilities
-
-- (void)loginAndGetUserInfo
-{
-    __block NSString *name = [[NSUserDefaults standardUserDefaults] objectForKey:@"facebook.name"];
-    
-    if (!FBSession.activeSession.isOpen)
-    {
-        [self openSession:^(FBSession *session, FBSessionState status, NSError *error) {            
-            if (error == nil)
-            {
-                if (!name.length)
-                {
-                    if (status == FBSessionStateOpen)
-                    {
-                        [self requestUserInfo];
-                    }
-                }
-                else
-                {
-                    _nameLabel.text = name;
-                }
-                
-                [_textView becomeFirstResponder];
-            }
-            else
-            {
-            }
-        }];
-    }
-    
-    if (name.length)
-    {
-        _nameLabel.text = name;
-    }
-    
-    _imageView.image = _postImage;
-    _textView.text = _initialPostText;
-    
-    [self showImageView:(_postImage != nil)];
-}
-
-- (void)logout
-{
-    _nameLabel.text = @"";
-    [[NSUserDefaults standardUserDefaults] setObject:@"" forKey:@"facebook.name"];
-    [FBSession.activeSession closeAndClearTokenInformation];
-    [self dismiss];
-}
-
-- (void)post
-{
-    [SVProgressHUD showWithStatus:_postRequestStartedMessage maskType:SVProgressHUDMaskTypeGradient];
-    
-    [self openSession:^(FBSession *session, FBSessionState status, NSError *error) {
-        [self post:^(BOOL succeded) {
-            if (succeded)
-            {
-                [SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
-            }
-            else
-            {
-                [SVProgressHUD showErrorWithStatus:_postErrorMessage];
-            }
-        }];
-    }];
-    
-    [self dismiss];
-}
-
-- (void)requestUserInfo
-{
-    [SVProgressHUD showWithStatus:_userInfoRequestStartedMessage maskType:SVProgressHUDMaskTypeGradient];
-    
-    [self openSession:^(FBSession *session, FBSessionState status, NSError *error) {
-        [self userInfo:^(NSDictionary<FBGraphUser> *user) {
-            
-            if (user.name)
-            {
-                [[NSUserDefaults standardUserDefaults] setObject:user.name forKey:@"facebook.name"];
-                _nameLabel.text = user.name;
-                [SVProgressHUD showSuccessWithStatus:_userInfoSuccessMessage];
-                [_textView becomeFirstResponder];
-            }
-            else
-            {
-                [SVProgressHUD showErrorWithStatus:_userInfoErrorMessage];
-            }
-            
-        }];
-    }];
-}
 
 - (void)showImageView:(BOOL)show
 {
@@ -572,39 +463,63 @@
     [_textView updateLines];
 }
 
-#pragma mark - Facebook utilities
+#pragma mark - Facebook
 
-- (void)openSession:(void (^)(FBSession *session, FBSessionState status, NSError *error))completion
+- (void)post
 {
-    if (!FBSession.activeSession.isOpen)
-    {
-        [FBSession openActiveSessionWithPublishPermissions:@[@"publish_actions"] defaultAudience:FBSessionDefaultAudienceEveryone allowLoginUI:YES completionHandler:
-         ^(FBSession *session, FBSessionState status, NSError *error){
-             completion(session, status, error);
-         }];
-    }
-    else
-    {
-        completion(FBSession.activeSession, FBSession.activeSession.state, nil);
-    }
+    [SVProgressHUD showWithStatus:_postRequestStartedMessage maskType:SVProgressHUDMaskTypeGradient];
+    
+    NSArray *permissions = [NSArray arrayWithObject:@"publish_actions"];
+    
+    if (FBSession.activeSession.isOpen) {
+        if ([FBSession.activeSession.permissions indexOfObject:@"publish_actions"] == NSNotFound) {
+            [FBSession.activeSession reauthorizeWithPublishPermissions:permissions
+                                                       defaultAudience:FBSessionDefaultAudienceFriends
+                                                     completionHandler:^(FBSession *session, NSError *error) {
+                                                         if (!error) {
+                                                             [self publishStory:^(FBRequestConnection *connection, id result, NSError *error) {
+																 if (!error) {
+																	 [SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
+																 } else {
+																	 [SVProgressHUD showErrorWithStatus:_postErrorMessage];
+																 }
+															 }];
+														 } else {
+															 [SVProgressHUD showErrorWithStatus:_postErrorMessage];
+														 }
+													 }];
+		} else {
+			[self publishStory:^(FBRequestConnection *connection, id result, NSError *error) {
+				if (!error) {
+					[SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
+				} else {
+					[SVProgressHUD showErrorWithStatus:_postErrorMessage];
+				}
+			}];
+		}
+		
+	} else {
+		[FBSession openActiveSessionWithPermissions:permissions
+									   allowLoginUI:YES
+								  completionHandler:^(FBSession *session, FBSessionState status, NSError *error) {
+									  if (!error) {
+										  [self publishStory:^(FBRequestConnection *connection, id result, NSError *error) {
+											  if (!error) {
+												  [SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
+											  } else {
+												  [SVProgressHUD showErrorWithStatus:_postErrorMessage];
+											  }
+										  }];
+									  } else {
+										  [SVProgressHUD showErrorWithStatus:_postErrorMessage];
+									  }
+								  }];
+	}
 }
 
-- (void)userInfo:(void (^)(NSDictionary<FBGraphUser> *user))completion
+- (void)publishStory:(void (^)(FBRequestConnection *connection, id result, NSError *error))completion
 {
-    [self openSession:^(FBSession *session, FBSessionState status, NSError *error) {
-        if (status == FBSessionStateOpen)
-        {
-            [[FBRequest requestForMe] startWithCompletionHandler:
-             ^(FBRequestConnection *connection, NSDictionary<FBGraphUser> *user, NSError *error) {
-                 completion(user);
-             }];
-        }
-    }];
-}
-
-- (void)post:(void (^)(BOOL succeded))completion
-{
-    NSMutableDictionary *parameters = [NSMutableDictionary new];    
+    NSMutableDictionary *parameters = [NSMutableDictionary new];
     if (_postTitle) [parameters setObject:_postTitle forKey:@"name"];
     if (_postCaption) [parameters setObject:_postCaption forKey:@"caption"];
     if (_postDescription) [parameters setObject:_postDescription forKey:@"description"];
@@ -612,20 +527,12 @@
     if (_postLink) [parameters setObject:_postLink forKey:@"link"];
     if (_textView.text) [parameters setObject:_textView.text forKey:@"message"];
     
-    [SVProgressHUD showWithStatus:_postRequestStartedMessage maskType:SVProgressHUDMaskTypeClear];
-    [[FBRequest requestWithGraphPath:@"me/feed" parameters:parameters HTTPMethod:@"POST"] startWithCompletionHandler:
-     ^(FBRequestConnection *connection, id result, NSError *error) {
-        if (error == nil)
-        {
-            [SVProgressHUD showSuccessWithStatus:_postSuccessMessage];
-            completion(YES);
-        }
-        else
-        {
-            [SVProgressHUD showErrorWithStatus:_postErrorMessage];
-            completion(NO);
-        }
-    }];
+	[FBRequestConnection startWithGraphPath:@"me/feed"
+                                 parameters:parameters
+                                 HTTPMethod:@"POST"
+                          completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
+                              completion(connection, result, error);
+                          }];
 }
 
 @end

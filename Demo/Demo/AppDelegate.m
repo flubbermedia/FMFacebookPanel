@@ -9,8 +9,6 @@
 #import "AppDelegate.h"
 #import "FMFacebookPanel.h"
 
-static NSString * const kFacebookAppID = @"168546796612510";
-
 @implementation AppDelegate
 
 @synthesize window = _window;
@@ -20,14 +18,9 @@ static NSString * const kFacebookAppID = @"168546796612510";
     return YES;
 }
 
-- (void)applicationWillTerminate:(UIApplication *)application
-{
-    [FBSession.activeSession close];
-}
-
-- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
-{    
-    return [FBSession.activeSession handleOpenURL:url];
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    
+    return [FBAppCall handleOpenURL:url sourceApplication:sourceApplication];
 }
 
 @end
