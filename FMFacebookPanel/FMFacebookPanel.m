@@ -325,8 +325,6 @@ typedef enum {
 	self.postImage = nil;
 	self.postLink = nil;
 	self.postText = nil;
-	
-	_textView.text = @"";
 }
 
 #pragma mark - Rotation
@@ -486,7 +484,7 @@ typedef enum {
 {
 	[SVProgressHUD showWithStatus:_postRequestStartedMessage maskType:SVProgressHUDMaskTypeGradient];
     
-    void (^publishStoryBlock)(FBRequestConnection *, id, NSError *) = ^(FBRequestConnection *connection, id result, NSError *error) {
+    void (^publishGraphBlock)(FBRequestConnection *, id, NSError *) = ^(FBRequestConnection *connection, id result, NSError *error) {
         if (!error) {
             [SVProgressHUD showSuccessWithStatus:_postRequestSucceedMessage];
         } else {
@@ -495,25 +493,41 @@ typedef enum {
     };
 
 	NSArray *permissions = @[@"publish_actions"];
-	NSDictionary *storyParams = @{@"message": _textView.text, @"link": _postLink, @"source": _postImage, @"postType": @(_postType)};
+	
+	NSString *path = @"/me/feed";
+	
+	NSMutableDictionary *params = [NSMutableDictionary new];
+	[params addEntriesFromDictionary:@{@"message": _textView.text}];
+	
+	switch (_postType) {
+		case PostTypeImage:
+			path = @"/me/photos";
+			[params addEntriesFromDictionary:@{@"source": _postImage}];
+			break;
+		case PostTypeLink:
+			[params addEntriesFromDictionary:@{@"link": _postLink}];
+			break;
+		default:
+			break;
+	}
 	
 	if (FBSession.activeSession.isOpen) {
 		if ([FBSession.activeSession.permissions indexOfObject:@"publish_actions"] == NSNotFound) {
 			[FBSession.activeSession reauthorizeWithPublishPermissions:permissions defaultAudience:FBSessionDefaultAudienceFriends completionHandler:^(FBSession *session, NSError *error) {
                 if (!error) {
-                    [self publishStory:storyParams completion:publishStoryBlock];
+                    [self publishGraph:path params:params completion:publishGraphBlock];
                 } else {
                     [SVProgressHUD showErrorWithStatus:_postAuthenticationErrorMessage];
                 }
             }];
 		} else {
-			[self publishStory:storyParams completion:publishStoryBlock];
+			[self publishGraph:path params:params completion:publishGraphBlock];
 		}
 		
 	} else {
 		[FBSession openActiveSessionWithPermissions:permissions allowLoginUI:YES completionHandler:^(FBSession *session, FBSessionState status, NSError *error) {
             if (!error) {
-                [self publishStory:storyParams completion:publishStoryBlock];
+                [self publishGraph:path params:params completion:publishGraphBlock];
             } else {
                 [SVProgressHUD showErrorWithStatus:_postAuthenticationErrorMessage];
             }
@@ -523,22 +537,9 @@ typedef enum {
 	[self dismiss];
 }
 
-- (void)publishStory:(NSDictionary *)story completion:(void (^)(FBRequestConnection *connection, id result, NSError *error))completion
-{
-	NSString *graphPath = @"/me/feed";
-	
-	switch ([story[@"postType"] intValue]) {
-		case PostTypeImage:
-			graphPath = @"/me/photos";
-			break;
-		case PostTypeLink:
-			graphPath = @"/me/links";
-			break;
-		default:
-			break;
-	}
-	
-	[FBRequestConnection startWithGraphPath:graphPath parameters:story HTTPMethod:@"POST" completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
+- (void)publishGraph:(NSString *)graphPath params:(NSMutableDictionary *)params completion:(void (^)(FBRequestConnection *connection, id result, NSError *error))completion
+{	
+	[FBRequestConnection startWithGraphPath:graphPath parameters:params HTTPMethod:@"POST" completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
 		completion(connection, result, error);
 	}];
 }
