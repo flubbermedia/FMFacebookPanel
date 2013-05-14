@@ -9,24 +9,18 @@
 #import "AppDelegate.h"
 #import "FMFacebookPanel.h"
 
-static NSString * const kFacebookAppID = @"168546796612510";
-
 @implementation AppDelegate
 
 @synthesize window = _window;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-{
-    //Setup Facebook with your Facebook App ID
-    [[FMFacebookPanel sharedViewController] setup:kFacebookAppID];
-    
+{    
     return YES;
 }
 
-- (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url
-{
-    //Let Facebook handle the open url
-    return [[FMFacebookPanel sharedViewController].facebook handleOpenURL:url];
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    
+    return [FBAppCall handleOpenURL:url sourceApplication:sourceApplication];
 }
 
 @end

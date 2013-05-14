@@ -9,51 +9,31 @@
 #import "ViewController.h"
 #import "FMFacebookPanel.h"
 
-@interface ViewController ()
-
-@end
-
 @implementation ViewController
-
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-}
-
-- (void)viewDidUnload
-{
-    [super viewDidUnload];
-}
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone) {
-        return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
-    } else {
-        return YES;
-    }
+	if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone) {
+		return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
+	} else {
+		return YES;
+	}
 }
 
 #pragma mark - Actions
 
 - (IBAction)didTapShareImage:(id)sender
 {
-    NSString *text = @"Sharing images is very easy";
-    UIImage *image = [UIImage imageNamed:@"Flubber.png"];
-    
-    [[FMFacebookPanel sharedViewController] setText:text];
-    [[FMFacebookPanel sharedViewController] setImage:image];
-    [[FMFacebookPanel sharedViewController] present];
+	[FMFacebookPanel sharedViewController].postText = @"Image text here";
+	[FMFacebookPanel sharedViewController].postImage = [UIImage imageNamed:@"Flubber.png"];
+	[[FMFacebookPanel sharedViewController] present];
 }
 
 - (IBAction)didTapShareLink:(id)sender
 {
-    NSString *text = @"Sharing links is very easy";
-    NSString *link = @"http://flubbermedia.com";
-    
-    [[FMFacebookPanel sharedViewController] setText:text];
-    [[FMFacebookPanel sharedViewController] setLink:link];
-    [[FMFacebookPanel sharedViewController] present];
+	[FMFacebookPanel sharedViewController].postText = @"Link text here";
+	[FMFacebookPanel sharedViewController].postLink = @"http://flubbermedia.com";
+	[[FMFacebookPanel sharedViewController] present];
 }
 
 @end
