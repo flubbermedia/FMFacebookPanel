@@ -490,8 +490,10 @@ typedef enum {
     void (^publishGraphBlock)(FBRequestConnection *, id, NSError *) = ^(FBRequestConnection *connection, id result, NSError *error) {
         if (!error) {
             [SVProgressHUD showSuccessWithStatus:_postRequestSucceedMessage];
+			FMLog(@"**FMFacebookPanel** Post succeded");
         } else {
             [SVProgressHUD showErrorWithStatus:_postRequestErrorMessage];
+			FMLog(@"**FMFacebookPanel** Post failed with error: %@", error);
         }
     };
 
@@ -521,6 +523,7 @@ typedef enum {
                     [self publishGraph:path params:params completion:publishGraphBlock];
                 } else {
                     [SVProgressHUD showErrorWithStatus:_postAuthenticationErrorMessage];
+					FMLog(@"**FMFacebookPanel** Authentication failed with error: %@", error);
                 }
             }];
 		} else {
@@ -533,6 +536,7 @@ typedef enum {
                 [self publishGraph:path params:params completion:publishGraphBlock];
             } else {
                 [SVProgressHUD showErrorWithStatus:_postAuthenticationErrorMessage];
+				FMLog(@"**FMFacebookPanel** Authentication failed with error: %@", error);
             }
         }];
 	}

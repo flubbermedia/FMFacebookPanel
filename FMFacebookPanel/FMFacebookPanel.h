@@ -29,6 +29,12 @@
 #import <UIKit/UIKit.h>
 #import <FacebookSDK/FacebookSDK.h>
 
+#if DEBUG
+#	define FMLog(...) NSLog(__VA_ARGS__)
+#else
+#   define FMLog(...)
+#endif
+
 @interface LineTextView : UITextView
 
 @property (strong, nonatomic) UIColor *lineColor;
