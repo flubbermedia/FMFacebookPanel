@@ -352,6 +352,14 @@ typedef enum {
 	}
 	
 	// IPAD
+	if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+	{
+		_containerViewFrame = CGRectMake(0., 0., 540., 200.);
+		_containerViewCenter = CGPointMake(384., 376.);
+		_headerImageViewFrame = CGRectMake(-4., -6., 548., 69.);
+		_postButtonFrame = CGRectMake(485., 8., 49., 31.);
+	}
+	
 	
 	CGRect chromeImageViewFrame = CGRectMake(-11., -8., 332., 240.);
 	CGRect imageImageViewFrame = CGRectMake(232., 20., 72., 72.);
