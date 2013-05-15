@@ -124,6 +124,7 @@ typedef enum {
 @property (strong, nonatomic) UIButton *cancelButton;
 @property (strong, nonatomic) UIButton *postButton;
 @property (strong, nonatomic) UILabel *facebookLabel;
+@property (strong, nonatomic) UIView *contentContainerView;
 @property (strong, nonatomic) UIView *textContainerView;
 @property (strong, nonatomic) LineTextView *textView;
 @property (strong, nonatomic) UIImageView *imageImageView;
@@ -137,6 +138,9 @@ typedef enum {
 @property (assign, nonatomic) CGRect headerImageViewFrame;
 @property (assign, nonatomic) CGRect cancelButtonFrame;
 @property (assign, nonatomic) CGRect postButtonFrame;
+@property (assign, nonatomic) CGFloat buttonsFontSize;
+@property (assign, nonatomic) CGFloat facebookLabelFontSize;
+@property (assign, nonatomic) CGRect contentContainerViewFrame;
 @property (strong, nonatomic) UIImage *backgroundImage;
 @property (strong, nonatomic) UIImage *headerImage;
 @property (strong, nonatomic) UIImage *cancelButtonImage;
@@ -149,6 +153,9 @@ typedef enum {
 @property (assign, nonatomic) CGRect headerImageViewFrameLandscape;
 @property (assign, nonatomic) CGRect cancelButtonFrameLandscape;
 @property (assign, nonatomic) CGRect postButtonFrameLandscape;
+@property (assign, nonatomic) CGFloat buttonsFontSizeLandscape;
+@property (assign, nonatomic) CGFloat facebookLabelFontSizeLandscape;
+@property (assign, nonatomic) CGRect contentContainerViewFrameLandscape;
 @property (strong, nonatomic) UIImage *backgroundImageLandscape;
 @property (strong, nonatomic) UIImage *headerImageLandscape;
 @property (strong, nonatomic) UIImage *cancelButtonImageLandscape;
@@ -216,59 +223,23 @@ typedef enum {
 	[self.view addSubview:_backgroundImageView];
 	
 	_containerView = [UIView new];
-	_containerView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleBottomMargin;
-	_containerView.backgroundColor = [UIColor colorWithWhite:0.93 alpha:1.0];
-	_containerView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin;
-	_containerView.layer.cornerRadius = 10.;
+	_containerView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 	[self.view addSubview:_containerView];
-	
-	_chromeImageView = [UIImageView new];
-	_chromeImageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-	[_containerView addSubview:_chromeImageView];
-	
-	_headerImageView = [UIImageView new];
-	_headerImageView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-	[_containerView addSubview:_headerImageView];
-	
-	_cancelButton = [UIButton buttonWithType:UIButtonTypeCustom];
-	_cancelButton.autoresizingMask = UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleBottomMargin;
-	_cancelButton.titleLabel.font = [UIFont boldSystemFontOfSize:12.];
-	_cancelButton.titleLabel.shadowOffset = CGSizeMake(0., -1.);
-	[_cancelButton setTitle:NSLocalizedString(@"Cancel", @"Facebook integration") forState:UIControlStateNormal];
-	[_cancelButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-	[_cancelButton setTitleShadowColor:[UIColor darkGrayColor] forState:UIControlStateNormal];
-	[_cancelButton setTitleShadowColor:[UIColor blackColor] forState:UIControlStateHighlighted];
-	[_cancelButton addTarget:self action:@selector(dismiss) forControlEvents:UIControlEventTouchUpInside];
-	[_containerView addSubview:_cancelButton];
-	
-	_postButton = [UIButton buttonWithType:UIButtonTypeCustom];
-	_postButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
-	_postButton.titleLabel.font = [UIFont boldSystemFontOfSize:12.];
-	_postButton.titleLabel.shadowOffset = CGSizeMake(0., -1.);
-	[_postButton setTitle:NSLocalizedString(@"Post", @"Facebook integration") forState:UIControlStateNormal];
-	[_postButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-	[_postButton setTitleShadowColor:[UIColor darkGrayColor] forState:UIControlStateNormal];
-	[_postButton addTarget:self action:@selector(post) forControlEvents:UIControlEventTouchUpInside];
-	[_containerView addSubview:_postButton];
-	
-	_facebookLabel = [UILabel new];
-	[_facebookLabel setText:@"Facebook"];
-	[_facebookLabel setFont:[UIFont boldSystemFontOfSize:20.]];
-	[_facebookLabel sizeToFit];
-	_facebookLabel.textColor = [UIColor whiteColor];
-	_facebookLabel.shadowColor = [UIColor darkGrayColor];
-	_facebookLabel.shadowOffset = CGSizeMake(0., -1.);
-	_facebookLabel.backgroundColor = [UIColor clearColor];
-	_facebookLabel.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleBottomMargin;
-	[_containerView addSubview:_facebookLabel];
 
+	_contentContainerView = [UIView new];
+	_contentContainerView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+	_contentContainerView.backgroundColor = [UIColor whiteColor];
+	_contentContainerView.layer.cornerRadius = 10.;
+	_contentContainerView.layer.masksToBounds = YES;
+	[_containerView addSubview:_contentContainerView];
+	
 	_textContainerView = [UIView new];
-	_textContainerView.backgroundColor = [UIColor clearColor];
-	_textContainerView.clipsToBounds = YES;
 	_textContainerView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-	[_containerView addSubview:_textContainerView];
+	_textContainerView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"FBSheetBottomShadow.png"]];
+	[_contentContainerView addSubview:_textContainerView];
 	
 	_textView = [LineTextView new];
+	_textView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	_textView.backgroundColor = [UIColor clearColor];
 	_textView.delegate = self;
 	_textView.font = [UIFont systemFontOfSize:17.];
@@ -279,33 +250,72 @@ typedef enum {
 	_textView.clipsToBounds = NO;
 	_textView.showsVerticalScrollIndicator = NO;
 	_textView.linesShouldFollowSuperview = YES;
-	_textView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	[_textContainerView addSubview:_textView];
 	
+	_headerImageView = [UIImageView new];
+	_headerImageView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+	[_containerView addSubview:_headerImageView];
+	
+	_cancelButton = [UIButton buttonWithType:UIButtonTypeCustom];
+	_cancelButton.autoresizingMask = UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleBottomMargin;
+	_cancelButton.titleLabel.shadowOffset = CGSizeMake(0., -1.);
+	[_cancelButton setTitle:NSLocalizedString(@"Cancel", @"Facebook integration") forState:UIControlStateNormal];
+	[_cancelButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+	[_cancelButton setTitleShadowColor:[UIColor darkGrayColor] forState:UIControlStateNormal];
+	[_cancelButton setTitleShadowColor:[UIColor blackColor] forState:UIControlStateHighlighted];
+	[_cancelButton addTarget:self action:@selector(dismiss) forControlEvents:UIControlEventTouchUpInside];
+	[_containerView addSubview:_cancelButton];
+	
+	_postButton = [UIButton buttonWithType:UIButtonTypeCustom];
+	_postButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
+	_postButton.titleLabel.shadowOffset = CGSizeMake(0., -1.);
+	[_postButton setTitle:NSLocalizedString(@"Post", @"Facebook integration") forState:UIControlStateNormal];
+	[_postButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+	[_postButton setTitleShadowColor:[UIColor darkGrayColor] forState:UIControlStateNormal];
+	[_postButton addTarget:self action:@selector(post) forControlEvents:UIControlEventTouchUpInside];
+	[_containerView addSubview:_postButton];
+	
+	_facebookLabel = [UILabel new];
+	_facebookLabel.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleBottomMargin;
+	_facebookLabel.text = @"Facebook";
+	_facebookLabel.textAlignment = NSTextAlignmentCenter;
+	_facebookLabel.textColor = [UIColor whiteColor];
+	_facebookLabel.shadowColor = [UIColor darkGrayColor];
+	_facebookLabel.shadowOffset = CGSizeMake(0., -1.);
+	_facebookLabel.backgroundColor = [UIColor clearColor];
+	[_containerView addSubview:_facebookLabel];
+	
+	_chromeImageView = [UIImageView new];
+	_chromeImageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+	[_containerView addSubview:_chromeImageView];
+	
 	_imageImageView = [UIImageView new];
+	_imageImageView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
 	_imageImageView.contentMode = UIViewContentModeScaleAspectFill;
 	_imageImageView.clipsToBounds = YES;
-	_imageImageView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
 	_imageImageView.backgroundColor = [UIColor darkGrayColor];
 	_imageImageView.layer.cornerRadius = 4.;
-	[_containerView addSubview:_imageImageView];
+	[_contentContainerView addSubview:_imageImageView];
 	
 	_imageChromeImageView = [UIImageView new];
 	_imageChromeImageView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
-	[_containerView addSubview:_imageChromeImageView];
-
+	[_contentContainerView addSubview:_imageChromeImageView];
+	
 	_imageClipImageView = [UIImageView new];
 	_imageClipImageView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
 	[_containerView addSubview:_imageClipImageView];
 
 	// Frame setup
 
-	// 3.5"
+	// IPHONE 3.5"
 	_containerViewFrame = CGRectMake(0., 0., 310., 200.);
 	_containerViewCenter = CGPointMake(160., 115.);
 	_headerImageViewFrame = CGRectMake(-4., -6., 318., 69.);
 	_cancelButtonFrame = CGRectMake(7., 8., 61., 31.);
 	_postButtonFrame = CGRectMake(255., 8., 49., 31.);
+	_buttonsFontSize = 12.;
+	_facebookLabelFontSize = 20.;
+	_contentContainerViewFrame = CGRectMake(0., 36., CGRectGetWidth(_containerViewFrame), CGRectGetHeight(_containerViewFrame) - 36.);
 	_backgroundImage = [UIImage imageNamed:@"FMFacebookPanel.bundle/ComposeSheetVignettePortrait.png"];
 	_headerImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/SLFacebookSheetHeader.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0, 90, 0, 90)];
 	_cancelButtonImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/SLFacebookSheetCancelButton.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0, 10, 0, 10)];
@@ -313,11 +323,14 @@ typedef enum {
 	_postButtonImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/SLFacebookSheetPostButton.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0, 10, 0, 10)];
 	_postButtonPressedImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/SLFacebookSheetPostButton-pressed.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0, 10, 0, 10)];
 	
-	_containerViewFrameLandscape = CGRectMake(0., 0., 470., 146.);
+	_containerViewFrameLandscape = CGRectMake(0., 0., 470., 140.);
 	_containerViewCenterLandscape = CGPointMake(240., 73.);
 	_headerImageViewFrameLandscape = CGRectMake(-4., -17., 478., 66.);
 	_cancelButtonFrameLandscape = CGRectMake(7., 3., 50., 26.);
 	_postButtonFrameLandscape = CGRectMake(421., 3., 44., 26.);
+	_buttonsFontSizeLandscape = 10.;
+	_facebookLabelFontSizeLandscape = 16.;
+	_contentContainerViewFrameLandscape = CGRectMake(0., 23., CGRectGetWidth(_containerViewFrameLandscape), CGRectGetHeight(_containerViewFrameLandscape) - 23.);
 	_backgroundImageLandscape = [UIImage imageNamed:@"FMFacebookPanel.bundle/ComposeSheetVignetteLandscape.png"];
 	_headerImageLandscape = [[UIImage imageNamed:@"FMFacebookPanel.bundle/SLFacebookSheetHeader-landscape.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0, 90, 0, 90)];
 	_cancelButtonImageLandscape = [[UIImage imageNamed:@"FMFacebookPanel.bundle/SLFacebookSheetCancelButton-landscape.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0, 10, 0, 10)];
@@ -325,24 +338,25 @@ typedef enum {
 	_postButtonImageLandscape = [[UIImage imageNamed:@"FMFacebookPanel.bundle/SLFacebookSheetPostButton-landscape.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0, 10, 0, 10)];
 	_postButtonPressedImageLandscape = [[UIImage imageNamed:@"FMFacebookPanel.bundle/SLFacebookSheetPostButton-landscape-pressed.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0, 10, 0, 10)];
 	
+	// IPHONE 4"
 	if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone && CGRectGetHeight([UIScreen mainScreen].bounds) == 568.)
 	{
-		_containerViewFrameLandscape = CGRectMake(0., 0., 558., 146.);
+		_containerViewFrameLandscape = CGRectMake(0., 0., 558., 140.);
 		_containerViewCenter = CGPointMake(160., 144.);
 		_containerViewCenterLandscape = CGPointMake(284., 73.);
 		_headerImageViewFrameLandscape = CGRectMake(-4., -17., 566., 66.);
 		_postButtonFrameLandscape = CGRectMake(509., 3., 44., 26.);
+		_contentContainerViewFrameLandscape = CGRectMake(0., 23., CGRectGetWidth(_containerViewFrameLandscape), CGRectGetHeight(_containerViewFrameLandscape) - 23.);
 		_backgroundImage = [UIImage imageNamed:@"FMFacebookPanel.bundle/ComposeSheetVignettePortrait-568h.png"];
 		_backgroundImageLandscape = [UIImage imageNamed:@"FMFacebookPanel.bundle/ComposeSheetVignetteLandscape-568h.png"];
 	}
 	
+	// IPAD
+	
 	CGRect chromeImageViewFrame = CGRectMake(-11., -8., 332., 240.);
-	CGPoint facebookLabelCenter = CGPointMake(156., 24.);
-	CGRect imageImageViewFrame = CGRectMake(232., 57., 72., 72.);
+	CGRect imageImageViewFrame = CGRectMake(232., 20., 72., 72.);
 	CGRect imageChromeImageViewFrame = UIEdgeInsetsInsetRect(imageImageViewFrame, UIEdgeInsetsMake(-2., -6., -6., -6.));
-	CGRect imageClipImageViewFrame = CGRectMake(236., 62., 79., 34.);
-	CGRect textContainerViewFrame = CGRectMake(0., 46., CGRectGetWidth(_containerViewFrame), 145.);
-	CGRect textViewFrame = CGRectMake(0., -10., CGRectGetWidth(textContainerViewFrame), CGRectGetHeight(textContainerViewFrame));
+	CGRect imageClipImageViewFrame = CGRectMake(236., 60., 79., 34.);
 	UIImage *chromeImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/SLFacebookSheetBevel.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(90, 90, 90, 90)];
 	UIImage *imageChromeImage = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetImageBorderSquare.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(39., 41., 39., 42.)];
 	UIImage *imageClipImage = [UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetPaperClip.png"];
@@ -360,18 +374,22 @@ typedef enum {
 	_headerImageView.image = _headerImage;
 	
 	_cancelButton.frame = _cancelButtonFrame;
+	_cancelButton.titleLabel.font = [UIFont boldSystemFontOfSize:_buttonsFontSize];
 	[_cancelButton setBackgroundImage:_cancelButtonImage forState:UIControlStateNormal];
 	[_cancelButton setBackgroundImage:_cancelButtonPressedImage forState:UIControlStateHighlighted];
 	
 	_postButton.frame = _postButtonFrame;
+	_postButton.titleLabel.font = [UIFont boldSystemFontOfSize:_buttonsFontSize];
 	[_postButton setBackgroundImage:_postButtonImage forState:UIControlStateNormal];
 	[_postButton setBackgroundImage:_postButtonPressedImage forState:UIControlStateHighlighted];
 	
-	_facebookLabel.center = facebookLabelCenter;
+	_facebookLabel.frame = CGRectMake(0., 0., 100., 20.);
+	_facebookLabel.font = [UIFont boldSystemFontOfSize:_facebookLabelFontSize];
+	_facebookLabel.center = CGPointMake(_headerImageView.center.x, _cancelButton.center.y);
 	
-	_textContainerView.frame = textContainerViewFrame;
-	
-	_textView.frame = textViewFrame;
+	_contentContainerView.frame = _contentContainerViewFrame;
+	_textContainerView.frame =  UIEdgeInsetsInsetRect(_contentContainerView.bounds, UIEdgeInsetsMake(10., 0., -10., 0));
+	_textView.frame = CGRectOffset(_textContainerView.bounds, 0., -10);
 	
 	_imageImageView.frame = imageImageViewFrame;
 	
@@ -381,13 +399,7 @@ typedef enum {
 	_imageClipImageView.frame = imageClipImageViewFrame;
 	_imageClipImageView.image = imageClipImage;
 	
-	
-	
-	
-//	//
-//	
-//	
-//	[self showHideImageView];
+	[self showHideImageView];
 }
 
 - (void)viewDidDisappear:(BOOL)animated
@@ -423,6 +435,9 @@ typedef enum {
 
 	[rootVC.view addSubview:self.view];
 	[self viewWillAppear:YES];
+	
+	[self updateLayout];
+	_containerView.transform = CGAffineTransformMakeTranslation(0., -(_containerView.center.y + CGRectGetHeight(_containerView.frame)));
 	
 	[_textView becomeFirstResponder];
 	[UIView animateWithDuration:0.3
@@ -504,8 +519,17 @@ typedef enum {
 
 - (void)didRotate:(NSNotification *)notification
 {
+	[self updateLayout];
+}
+
+#pragma mark - Utilities
+
+- (void)updateLayout
+{
 	if (UIInterfaceOrientationIsLandscape(self.interfaceOrientation))
 	{
+		_backgroundImageView.image = _backgroundImageLandscape;
+		
 		_containerView.frame = _containerViewFrameLandscape;
 		_containerView.center = _containerViewCenterLandscape;
 		
@@ -513,32 +537,51 @@ typedef enum {
 		_headerImageView.image = _headerImageLandscape;
 		
 		_cancelButton.frame = _cancelButtonFrameLandscape;
+		_cancelButton.titleLabel.font = [UIFont boldSystemFontOfSize:_buttonsFontSizeLandscape];
 		[_cancelButton setBackgroundImage:_cancelButtonImageLandscape forState:UIControlStateNormal];
 		[_cancelButton setBackgroundImage:_cancelButtonPressedImageLandscape forState:UIControlStateHighlighted];
 		
 		_postButton.frame = _postButtonFrameLandscape;
+		_postButton.titleLabel.font = [UIFont boldSystemFontOfSize:_buttonsFontSizeLandscape];
 		[_postButton setBackgroundImage:_postButtonImageLandscape forState:UIControlStateNormal];
 		[_postButton setBackgroundImage:_postButtonPressedImageLandscape forState:UIControlStateHighlighted];
+		
+		_facebookLabel.font = [UIFont boldSystemFontOfSize:_facebookLabelFontSizeLandscape];
+		
+		_contentContainerView.frame = _contentContainerViewFrameLandscape;
 	}
 	else
 	{
+		_backgroundImageView.image = _backgroundImage;
+		
 		_containerView.frame = _containerViewFrame;
 		_containerView.center = _containerViewCenter;
-
+		
 		_headerImageView.frame = _headerImageViewFrame;
 		_headerImageView.image = _headerImage;
 		
 		_cancelButton.frame = _cancelButtonFrame;
+		_cancelButton.titleLabel.font = [UIFont boldSystemFontOfSize:_buttonsFontSize];
 		[_cancelButton setBackgroundImage:_cancelButtonImage forState:UIControlStateNormal];
 		[_cancelButton setBackgroundImage:_cancelButtonPressedImage forState:UIControlStateHighlighted];
 		
 		_postButton.frame = _postButtonFrame;
+		_postButton.titleLabel.font = [UIFont boldSystemFontOfSize:_buttonsFontSize];
 		[_postButton setBackgroundImage:_postButtonImage forState:UIControlStateNormal];
 		[_postButton setBackgroundImage:_postButtonPressedImage forState:UIControlStateHighlighted];
+		
+		_facebookLabel.font = [UIFont boldSystemFontOfSize:_facebookLabelFontSize];
+		
+		_contentContainerView.frame = _contentContainerViewFrame;
 	}
+	
+	_facebookLabel.center = CGPointMake(_headerImageView.center.x, _cancelButton.center.y);
+	
+	_textContainerView.frame =  UIEdgeInsetsInsetRect(_contentContainerView.bounds, UIEdgeInsetsMake(10., 0., -10., 0));
+	_textView.frame = CGRectOffset(_textContainerView.bounds, 0., -10);
+	
+	[self showHideImageView];
 }
-
-#pragma mark - Utilities
 
 - (void)showHideImageView
 {
@@ -567,6 +610,7 @@ typedef enum {
 
 - (void)post
 {
+	
 	[SVProgressHUD showWithStatus:_postRequestStartedMessage maskType:SVProgressHUDMaskTypeGradient];
     
     void (^publishGraphBlock)(FBRequestConnection *, id, NSError *) = ^(FBRequestConnection *connection, id result, NSError *error) {
