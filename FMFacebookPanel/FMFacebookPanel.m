@@ -71,11 +71,6 @@
 
 #pragma mark - Lines utilites
 
-//- (void)layoutSubviews
-//{
-//	[self updateLines];
-//}
-
 - (void)updateLines
 {
 	[_lines makeObjectsPerformSelector:@selector(removeFromSuperview)];
@@ -117,6 +112,10 @@ typedef enum {
 	PostTypeLink
 } PostType;
 
+@property (assign, nonatomic) PostType postType;
+@property (strong, nonatomic) NSDictionary *fbPayload;
+@property (strong, nonatomic) NSArray *fbPermissions;
+
 @property (strong, nonatomic) UIImageView *backgroundImageView;
 @property (strong, nonatomic) UIView *containerView;
 @property (strong, nonatomic) UIImageView *headerImageView;
@@ -130,8 +129,6 @@ typedef enum {
 @property (strong, nonatomic) UIImageView *imageImageView;
 @property (strong, nonatomic) UIImageView *imageChromeImageView;
 @property (strong, nonatomic) UIImageView *imageClipImageView;
-
-@property (assign, nonatomic) PostType postType;
 
 @property (assign, nonatomic) CGRect containerViewFrame;
 @property (assign, nonatomic) CGPoint containerViewCenter;
@@ -165,7 +162,6 @@ typedef enum {
 @property (strong, nonatomic) UIImage *postButtonImageLandscape;
 @property (strong, nonatomic) UIImage *postButtonPressedImageLandscape;
 
-
 @end
 
 @implementation FMFacebookPanel
@@ -192,8 +188,7 @@ typedef enum {
 		_postRequestErrorMessage = NSLocalizedString(@"Error posting to Facebook", @"Facebook integration: Message displayed when an error occured while trying to post a picture on the user's wall.");
 		_postAuthenticationErrorMessage = NSLocalizedString(@"Error authenticating User", @"Facebook integration: Message displayed when an error occured while trying to authenticate the user.");
 		
-//		_textView = [LineTextView new];
-//		_imageView = [UIImageView new];
+		_fbPermissions = @[@"publish_actions"];
 	}
 	return self;
 }
@@ -433,9 +428,7 @@ typedef enum {
 #pragma mark - Public methods
 
 - (void)present
-{
-	[FBSession openActiveSessionWithAllowLoginUI:NO];
-	
+{	
 	UIViewController *rootVC = [UIApplication sharedApplication].keyWindow.rootViewController;
 	self.view.frame = rootVC.view.bounds;
 
@@ -623,26 +616,11 @@ typedef enum {
 
 - (void)post
 {
-	
-	[SVProgressHUD showWithStatus:_postRequestStartedMessage maskType:SVProgressHUDMaskTypeGradient];
-    
-    void (^publishGraphBlock)(FBRequestConnection *, id, NSError *) = ^(FBRequestConnection *connection, id result, NSError *error) {
-        if (!error) {
-            [SVProgressHUD showSuccessWithStatus:_postRequestSucceedMessage];
-			FMLog(@"**FMFacebookPanel** Post succeded");
-        } else {
-            [SVProgressHUD showErrorWithStatus:_postRequestErrorMessage];
-			FMLog(@"**FMFacebookPanel** Post failed with error: %@", error);
-        }
-    };
-
-	NSArray *permissions = @[@"publish_actions"];
+	_fbPayload = nil;
 	
 	NSString *path = @"/me/feed";
-	
 	NSMutableDictionary *params = [NSMutableDictionary new];
 	[params addEntriesFromDictionary:@{@"message": _textView.text}];
-	
 	switch (_postType) {
 		case PostTypeImage:
 			path = @"/me/photos";
@@ -655,39 +633,91 @@ typedef enum {
 			break;
 	}
 	
-	if (FBSession.activeSession.isOpen) {
-		if ([FBSession.activeSession.permissions indexOfObject:@"publish_actions"] == NSNotFound) {
-			[FBSession.activeSession reauthorizeWithPublishPermissions:permissions defaultAudience:FBSessionDefaultAudienceFriends completionHandler:^(FBSession *session, NSError *error) {
-                if (!error) {
-                    [self publishGraph:path params:params completion:publishGraphBlock];
-                } else {
-                    [SVProgressHUD showErrorWithStatus:_postAuthenticationErrorMessage];
-					FMLog(@"**FMFacebookPanel** Authentication failed with error: %@", error);
-                }
-            }];
-		} else {
-			[self publishGraph:path params:params completion:publishGraphBlock];
-		}
-		
-	} else {
-		[FBSession openActiveSessionWithPermissions:permissions allowLoginUI:YES completionHandler:^(FBSession *session, FBSessionState status, NSError *error) {
-            if (!error) {
-                [self publishGraph:path params:params completion:publishGraphBlock];
-            } else {
-                [SVProgressHUD showErrorWithStatus:_postAuthenticationErrorMessage];
-				FMLog(@"**FMFacebookPanel** Authentication failed with error: %@", error);
-            }
-        }];
-	}
+	_fbPayload = @{@"path": path, @"params": params};
+	
+	[self checkFacebookIsReady];
 	
 	[self dismiss];
 }
 
-- (void)publishGraph:(NSString *)graphPath params:(NSMutableDictionary *)params completion:(void (^)(FBRequestConnection *connection, id result, NSError *error))completion
-{	
-	[FBRequestConnection startWithGraphPath:graphPath parameters:params HTTPMethod:@"POST" completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
-		completion(connection, result, error);
-	}];
+- (BOOL)activeSessionPermissionsContain:(NSArray *)permissions
+{
+	for (NSString *permission in permissions)
+	{
+		if ([FBSession.activeSession.permissions indexOfObject:permission] == NSNotFound)
+		{
+			return NO;
+		}
+	}
+	return YES;
+}
+
+- (void)checkFacebookIsReady
+{
+	[SVProgressHUD showWithStatus:_postRequestStartedMessage maskType:SVProgressHUDMaskTypeGradient];
+	if (FBSession.activeSession.isOpen) {
+		if (![self activeSessionPermissionsContain:_fbPermissions]) {
+			[FBSession.activeSession reauthorizeWithPublishPermissions:_fbPermissions defaultAudience:FBSessionDefaultAudienceFriends completionHandler:^(FBSession *session, NSError *error) {
+				[self sessionStateChanged:session state:session.state error:error];
+            }];
+		} else {
+			[self checkForPayloadToSend];
+		}
+		
+	} else {
+		[FBSession openActiveSessionWithPermissions:_fbPermissions allowLoginUI:YES completionHandler:^(FBSession *session, FBSessionState status, NSError *error) {
+            [self sessionStateChanged:session state:status error:error];
+        }];
+	}
+}
+
+- (void)sessionStateChanged:(FBSession *)session state:(FBSessionState)state error:(NSError *)error
+{
+	if (!error)
+	{
+		[self checkForPayloadToSend];
+	}
+	else
+	{
+		FMLog(@"**FMFacebookPanel** Post failed with error: %@", error);
+		if ([SVProgressHUD isVisible])
+		{
+			[SVProgressHUD showErrorWithStatus:_postAuthenticationErrorMessage];
+		}
+	}
+}
+
+- (void)checkForPayloadToSend
+{
+	if (!_fbPayload)
+	{
+		//Do nothing...
+	}
+	else if (FBSession.activeSession.isOpen && [self activeSessionPermissionsContain:_fbPermissions])
+	{
+		
+		void (^publishGraphBlock)(FBRequestConnection *, id, NSError *) = ^(FBRequestConnection *connection, id result, NSError *error) {
+			
+			_fbPayload = nil;
+			
+			if (!error) {
+				FMLog(@"**FMFacebookPanel** Post succeded");
+				if ([SVProgressHUD isVisible])
+					[SVProgressHUD showSuccessWithStatus:_postRequestSucceedMessage];
+			} else {
+				FMLog(@"**FMFacebookPanel** Post failed with error: %@", error);
+				if ([SVProgressHUD isVisible])
+					[SVProgressHUD showErrorWithStatus:_postRequestErrorMessage];
+			}
+		};
+
+		[FBRequestConnection startWithGraphPath:_fbPayload[@"path"] parameters:_fbPayload[@"params"] HTTPMethod:@"POST" completionHandler:publishGraphBlock];
+
+	}
+	else
+	{
+		[self checkFacebookIsReady];
+	}
 }
 
 @end
