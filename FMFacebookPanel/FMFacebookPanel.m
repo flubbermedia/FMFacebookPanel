@@ -188,7 +188,7 @@ typedef enum {
 		_postRequestErrorMessage = NSLocalizedString(@"Error posting to Facebook", @"Facebook integration: Message displayed when an error occured while trying to post a picture on the user's wall.");
 		_postAuthenticationErrorMessage = NSLocalizedString(@"Error authenticating User", @"Facebook integration: Message displayed when an error occured while trying to authenticate the user.");
 		
-		_fbPermissions = @[@"publish_actions"];
+		_fbPermissions = @[@"public_profile", @"publish_actions"];
 	}
 	return self;
 }
