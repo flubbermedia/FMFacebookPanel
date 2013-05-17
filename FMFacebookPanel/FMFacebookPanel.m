@@ -363,44 +363,11 @@ typedef enum {
 	}
 	
 	_backgroundImageView.frame = self.view.bounds;
-	_backgroundImageView.image = _backgroundImage;
 	
-	_containerView.frame = _containerViewFrame;
-	_containerView.center = _containerViewCenter;
-	
-	_chromeImageView.frame = UIEdgeInsetsInsetRect(_containerView.bounds, UIEdgeInsetsMake(-8., -11., -32., -11.));//chromeImageViewFrame;
-	_chromeImageView.image = _chromeImage;
-	
-	_headerImageView.frame = _headerImageViewFrame;
-	_headerImageView.image = _headerImage;
-	
-	_cancelButton.frame = _cancelButtonFrame;
-	_cancelButton.titleLabel.font = [UIFont boldSystemFontOfSize:_buttonsFontSize];
-	[_cancelButton setBackgroundImage:_cancelButtonImage forState:UIControlStateNormal];
-	[_cancelButton setBackgroundImage:_cancelButtonPressedImage forState:UIControlStateHighlighted];
-	
-	_postButton.frame = _postButtonFrame;
-	_postButton.titleLabel.font = [UIFont boldSystemFontOfSize:_buttonsFontSize];
-	[_postButton setBackgroundImage:_postButtonImage forState:UIControlStateNormal];
-	[_postButton setBackgroundImage:_postButtonPressedImage forState:UIControlStateHighlighted];
-	
-	_facebookLabel.frame = CGRectMake(0., 0., 100., 20.);
-	_facebookLabel.font = [UIFont boldSystemFontOfSize:_facebookLabelFontSize];
-	_facebookLabel.center = CGPointMake(_headerImageView.center.x, _cancelButton.center.y);
-	
-	_contentContainerView.frame = _contentContainerViewFrame;
-	_textContainerView.frame =  UIEdgeInsetsInsetRect(_contentContainerView.bounds, UIEdgeInsetsMake(10., 0., -10., 0));
-	_textView.frame = CGRectOffset(_textContainerView.bounds, 0., -10);
-	
-	_imageImageView.frame = CGRectMake(CGRectGetWidth(_containerView.bounds) - 78., 20., 72., 72.);
-	
-	_imageChromeImageView.frame = UIEdgeInsetsInsetRect(_imageImageView.frame, UIEdgeInsetsMake(-2., -6., -6., -6.));
-	_imageChromeImageView.image = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetImageBorderSquare.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(39., 41., 39., 42.)];
-	
-	_imageClipImageView.frame = CGRectMake(CGRectGetWidth(_containerView.bounds) - 74., 60., 79., 34.);
 	_imageClipImageView.image = [UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetPaperClip.png"];
-	
-	[self showHideImageView];
+	_imageChromeImageView.image = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetImageBorderSquare.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(39., 41., 39., 42.)];
+
+	[self updateLayout];
 }
 
 - (void)viewDidDisappear:(BOOL)animated
@@ -469,7 +436,6 @@ typedef enum {
 
 #pragma mark - Properties
 
-
 - (void)setPostText:(NSString *)text
 {
 	_postText = text;
@@ -496,95 +462,45 @@ typedef enum {
 	_postType = PostTypeLink;
 }
 
-#pragma mark - UITextViewDelegate
-
-- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text
-{
-	[_textView updateLines];
-	return YES;
-}
-
-#pragma mark - Application Notifications
-
-- (void)applicationDidBecomeActive:(NSNotification *)notification
-{
-	[FBAppCall handleDidBecomeActive];
-}
-
-- (void)applicationWillTerminate:(NSNotification *)notification
-{
-	[FBSession.activeSession close];
-}
-
-- (void)didRotate:(NSNotification *)notification
-{
-	[self updateLayout];
-}
-
-#pragma mark - Utilities
+#pragma mark - Layout
 
 - (void)updateLayout
 {
-	if (UIInterfaceOrientationIsLandscape(self.interfaceOrientation))
-	{
-		_backgroundImageView.image = _backgroundImageLandscape;
-		
-		_containerView.frame = _containerViewFrameLandscape;
-		_containerView.center = _containerViewCenterLandscape;
-		
-		if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
-		{
-			_chromeImageView.image = _chromeImageLandscape;
-			
-			_headerImageView.frame = _headerImageViewFrameLandscape;
-			_headerImageView.image = _headerImageLandscape;
-			
-			_cancelButton.frame = _cancelButtonFrameLandscape;
-			_cancelButton.titleLabel.font = [UIFont boldSystemFontOfSize:_buttonsFontSizeLandscape];
-			[_cancelButton setBackgroundImage:_cancelButtonImageLandscape forState:UIControlStateNormal];
-			[_cancelButton setBackgroundImage:_cancelButtonPressedImageLandscape forState:UIControlStateHighlighted];
-			
-			_postButton.frame = _postButtonFrameLandscape;
-			_postButton.titleLabel.font = [UIFont boldSystemFontOfSize:_buttonsFontSizeLandscape];
-			[_postButton setBackgroundImage:_postButtonImageLandscape forState:UIControlStateNormal];
-			[_postButton setBackgroundImage:_postButtonPressedImageLandscape forState:UIControlStateHighlighted];
-			
-			_facebookLabel.font = [UIFont boldSystemFontOfSize:_facebookLabelFontSizeLandscape];
-			
-			_contentContainerView.frame = _contentContainerViewFrameLandscape;
-		}
-	}
-	else
-	{
-		_backgroundImageView.image = _backgroundImage;
-		
-		_containerView.frame = _containerViewFrame;
-		_containerView.center = _containerViewCenter;
-		
-		_chromeImageView.image = _chromeImage;
-		
-		_headerImageView.frame = _headerImageViewFrame;
-		_headerImageView.image = _headerImage;
-		
-		_cancelButton.frame = _cancelButtonFrame;
-		_cancelButton.titleLabel.font = [UIFont boldSystemFontOfSize:_buttonsFontSize];
-		[_cancelButton setBackgroundImage:_cancelButtonImage forState:UIControlStateNormal];
-		[_cancelButton setBackgroundImage:_cancelButtonPressedImage forState:UIControlStateHighlighted];
-		
-		_postButton.frame = _postButtonFrame;
-		_postButton.titleLabel.font = [UIFont boldSystemFontOfSize:_buttonsFontSize];
-		[_postButton setBackgroundImage:_postButtonImage forState:UIControlStateNormal];
-		[_postButton setBackgroundImage:_postButtonPressedImage forState:UIControlStateHighlighted];
-		
-		_facebookLabel.font = [UIFont boldSystemFontOfSize:_facebookLabelFontSize];
-		
-		_contentContainerView.frame = _contentContainerViewFrame;
-	}
+	BOOL isLandscape = UIInterfaceOrientationIsLandscape(self.interfaceOrientation);
+	BOOL isiPhone = (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone);
 	
+	_backgroundImageView.image = (isLandscape) ? _backgroundImageLandscape : _backgroundImage;
+	
+	_containerView.frame = (isLandscape) ? _containerViewFrameLandscape : _containerViewFrame;
+	_containerView.center = (isLandscape) ? _containerViewCenterLandscape : _containerViewCenter;
+	
+	_chromeImageView.frame = UIEdgeInsetsInsetRect(_containerView.bounds, UIEdgeInsetsMake(-8., -11., -32., -11.));
+	_chromeImageView.image = (isLandscape && isiPhone) ? _chromeImageLandscape : _chromeImage;
+	
+	_headerImageView.frame = (isLandscape && isiPhone) ? _headerImageViewFrameLandscape : _headerImageViewFrame;
+	_headerImageView.image = (isLandscape && isiPhone) ? _headerImageLandscape : _headerImage;
+	
+	_cancelButton.frame = (isLandscape && isiPhone) ? _cancelButtonFrameLandscape : _cancelButtonFrame;
+	_cancelButton.titleLabel.font = [UIFont boldSystemFontOfSize: (isLandscape && isiPhone) ? _buttonsFontSizeLandscape : _buttonsFontSize];
+	[_cancelButton setBackgroundImage: (isLandscape && isiPhone) ? _cancelButtonImageLandscape : _cancelButtonImage forState:UIControlStateNormal];
+	[_cancelButton setBackgroundImage: (isLandscape && isiPhone) ? _cancelButtonPressedImageLandscape : _cancelButtonPressedImage forState:UIControlStateHighlighted];
+	
+	_postButton.frame = (isLandscape && isiPhone) ? _postButtonFrameLandscape : _postButtonFrame;
+	_postButton.titleLabel.font = [UIFont boldSystemFontOfSize: (isLandscape && isiPhone) ? _buttonsFontSizeLandscape : _buttonsFontSize];
+	[_postButton setBackgroundImage: (isLandscape && isiPhone) ? _postButtonImageLandscape : _postButtonImage forState:UIControlStateNormal];
+	[_postButton setBackgroundImage: (isLandscape && isiPhone) ? _postButtonPressedImageLandscape : _postButtonPressedImage forState:UIControlStateHighlighted];
+	
+	_facebookLabel.frame = CGRectMake(0., 0., 100., 20.);
+	_facebookLabel.font = [UIFont boldSystemFontOfSize: (isLandscape && isiPhone) ? _facebookLabelFontSizeLandscape : _facebookLabelFontSize];
 	_facebookLabel.center = CGPointMake(_headerImageView.center.x, _cancelButton.center.y);
 	
+	_contentContainerView.frame = (isLandscape && isiPhone) ? _contentContainerViewFrameLandscape : _contentContainerViewFrame;
 	_textContainerView.frame =  UIEdgeInsetsInsetRect(_contentContainerView.bounds, UIEdgeInsetsMake(10., 0., -10., 0));
 	_textView.frame = CGRectOffset(_textContainerView.bounds, 0., -10);
+	
+	_imageImageView.frame = CGRectMake(CGRectGetWidth(_containerView.bounds) - 78., 20., 72., 72.);
+	_imageChromeImageView.frame = UIEdgeInsetsInsetRect(_imageImageView.frame, UIEdgeInsetsMake(-2., -6., -6., -6.));	
+	_imageClipImageView.frame = CGRectMake(CGRectGetWidth(_containerView.bounds) - 74., 60., 79., 34.);
 	
 	[self showHideImageView];
 }
@@ -610,6 +526,31 @@ typedef enum {
 	}
 	_textView.frame = frame;
 	[_textView updateLines];
+}
+
+#pragma mark - UITextViewDelegate
+
+- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text
+{
+	[_textView updateLines];
+	return YES;
+}
+
+#pragma mark - Application Notifications
+
+- (void)applicationDidBecomeActive:(NSNotification *)notification
+{
+	[FBAppCall handleDidBecomeActive];
+}
+
+- (void)applicationWillTerminate:(NSNotification *)notification
+{
+	[FBSession.activeSession close];
+}
+
+- (void)didRotate:(NSNotification *)notification
+{
+	[self updateLayout];
 }
 
 #pragma mark - Facebook
