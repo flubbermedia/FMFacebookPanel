@@ -619,6 +619,7 @@ typedef enum {
 	_fbPayload = nil;
 	
 	NSString *path = @"/me/feed";
+	
 	NSMutableDictionary *params = [NSMutableDictionary new];
 	[params addEntriesFromDictionary:@{@"message": _textView.text}];
 	switch (_postType) {
@@ -635,35 +636,21 @@ typedef enum {
 	
 	_fbPayload = @{@"path": path, @"params": params};
 	
-	[self checkFacebookIsReady];
+	[self sendPayloadIfPossible];
 	
 	[self dismiss];
 }
 
-- (BOOL)activeSessionPermissionsContain:(NSArray *)permissions
-{
-	for (NSString *permission in permissions)
-	{
-		if ([FBSession.activeSession.permissions indexOfObject:permission] == NSNotFound)
-		{
-			return NO;
-		}
-	}
-	return YES;
-}
-
-- (void)checkFacebookIsReady
-{
-	[SVProgressHUD showWithStatus:_postRequestStartedMessage maskType:SVProgressHUDMaskTypeGradient];
+- (void)warmUpFacebookSession
+{	
 	if (FBSession.activeSession.isOpen) {
-		if (![self activeSessionPermissionsContain:_fbPermissions]) {
+		if ([self activeSessionHasPermissions:_fbPermissions]) {
+			[self sendPayloadIfPossible];
+		} else {
 			[FBSession.activeSession reauthorizeWithPublishPermissions:_fbPermissions defaultAudience:FBSessionDefaultAudienceFriends completionHandler:^(FBSession *session, NSError *error) {
 				[self sessionStateChanged:session state:session.state error:error];
             }];
-		} else {
-			[self checkForPayloadToSend];
 		}
-		
 	} else {
 		[FBSession openActiveSessionWithPermissions:_fbPermissions allowLoginUI:YES completionHandler:^(FBSession *session, FBSessionState status, NSError *error) {
             [self sessionStateChanged:session state:status error:error];
@@ -671,32 +658,16 @@ typedef enum {
 	}
 }
 
-- (void)sessionStateChanged:(FBSession *)session state:(FBSessionState)state error:(NSError *)error
-{
-	if (!error)
-	{
-		[self checkForPayloadToSend];
-	}
-	else
-	{
-		FMLog(@"**FMFacebookPanel** Post failed with error: %@", error);
-		if ([SVProgressHUD isVisible])
-		{
-			[SVProgressHUD showErrorWithStatus:_postAuthenticationErrorMessage];
-		}
-	}
-}
-
-- (void)checkForPayloadToSend
+- (void)sendPayloadIfPossible
 {
 	if (!_fbPayload)
+		return;
+	
+	[SVProgressHUD showWithStatus:_postRequestStartedMessage maskType:SVProgressHUDMaskTypeGradient];
+	
+	if (FBSession.activeSession.isOpen && [self activeSessionHasPermissions:_fbPermissions])
 	{
-		//Do nothing...
-	}
-	else if (FBSession.activeSession.isOpen && [self activeSessionPermissionsContain:_fbPermissions])
-	{
-		
-		void (^publishGraphBlock)(FBRequestConnection *, id, NSError *) = ^(FBRequestConnection *connection, id result, NSError *error) {
+		[FBRequestConnection startWithGraphPath:_fbPayload[@"path"] parameters:_fbPayload[@"params"] HTTPMethod:@"POST" completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
 			
 			_fbPayload = nil;
 			
@@ -709,15 +680,36 @@ typedef enum {
 				if ([SVProgressHUD isVisible])
 					[SVProgressHUD showErrorWithStatus:_postRequestErrorMessage];
 			}
-		};
-
-		[FBRequestConnection startWithGraphPath:_fbPayload[@"path"] parameters:_fbPayload[@"params"] HTTPMethod:@"POST" completionHandler:publishGraphBlock];
-
+		}];
 	}
 	else
 	{
-		[self checkFacebookIsReady];
+		[self warmUpFacebookSession];
 	}
+}
+
+- (void)sessionStateChanged:(FBSession *)session state:(FBSessionState)state error:(NSError *)error
+{
+	if (!error) {
+		[self sendPayloadIfPossible];
+	} else {
+		FMLog(@"**FMFacebookPanel** Session failed with error: %@", error);
+		if ([SVProgressHUD isVisible]) {
+			[SVProgressHUD showErrorWithStatus:_postAuthenticationErrorMessage];
+		}
+	}
+}
+
+- (BOOL)activeSessionHasPermissions:(NSArray *)permissions
+{
+	for (NSString *permission in permissions)
+	{
+		if ([FBSession.activeSession.permissions indexOfObject:permission] == NSNotFound)
+		{
+			return NO;
+		}
+	}
+	return YES;
 }
 
 @end
