@@ -466,7 +466,10 @@ typedef enum {
 
 - (void)updateLayout
 {
-	BOOL isLandscape = UIInterfaceOrientationIsLandscape(self.interfaceOrientation);
+//	BOOL isLandscape = UIInterfaceOrientationIsLandscape(self.interfaceOrientation);
+
+	// Using statusBarOrientation for better support in iOS5.
+	BOOL isLandscape = UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation);
 	BOOL isiPhone = (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone);
 	
 	_backgroundImageView.image = (isLandscape) ? _backgroundImageLandscape : _backgroundImage;
