@@ -613,11 +613,11 @@ typedef enum {
 			_fbPayload = nil;
 			
 			if (!error) {
-				FMLog(@"**FMFacebookPanel** Post succeded");
+				FMLog(@"FMFacebookPanel posted a Facebook object successfully");
 				if ([SVProgressHUD isVisible])
 					[SVProgressHUD showSuccessWithStatus:_postRequestSucceedMessage];
 			} else {
-				FMLog(@"**FMFacebookPanel** Post failed with error: %@", error);
+				FMLog(@"FMFacebookPanel failed to post on Facebook with error: %@", error);
 				if ([SVProgressHUD isVisible])
 					[SVProgressHUD showErrorWithStatus:_postRequestErrorMessage];
 			}
@@ -634,7 +634,7 @@ typedef enum {
 	if (!error) {
 		[self sendPayloadIfPossible];
 	} else {
-		FMLog(@"**FMFacebookPanel** Session failed with error: %@", error);
+		FMLog(@"FMFacebookPanel failed Facebook authentication with error: %@", error);
 		if ([SVProgressHUD isVisible]) {
 			[SVProgressHUD showErrorWithStatus:_postAuthenticationErrorMessage];
 		}
