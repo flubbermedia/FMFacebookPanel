@@ -1,62 +1,61 @@
 Purpose
 -------
 
-**FMFacebookPanel** is a class that replicates the Twitter interface in iOS 5.
-This lets you easily post text with a link or an image on Facebook without taking care of the Facebook iOS SDK methods and delegates.
+**FMFacebookPanel** is a class that replicates SLComposeViewController native Facebook sharing functionalities introduced in iOS6 and extends their availability in iOS5. Three types of sharing are supported: text, link and photo.
+Also it enables "Share attribution" on the content posted on the wall: content shared via the native SLComposeViewController gets an attribution of "via iOS", with **FMFacebookPanel** the content will be associated correctly to your app.
+
+The component UI mimics the original native dialog and is optimized for all rotations and screen sizes.
 
 ![Screenshot](http://assets.flubbermedia.com/github/github-fmfacebookpanel-screen.png)
-
-**NOTE: the supported build target is iOS 5.1 (Xcode 4.4)*
 
 Installation
 ------------
 
-1. Drag the FMFacebookPanel files in the project
+**FMFacebookPanel** has been recently updated to use the version 3.5 of Facebook SDK. The latest version of the SDK requires two separate steps to grant "read" and "write" permission. However, due to the basic purpose of this component, **FMFacebookPanel** uses deprecated methods that allow to request read and write permissions at the same time.
 
-  ![Files](http://assets.flubbermedia.com/github/github-fmfacebookpanel-files.png)
+1. Follow instructions for basic Facebook SDK integration: https://developers.facebook.com/docs/getting-started/facebook-sdk-for-ios/
+
+1. Drag the FMFacebookPanel folder into your Xcode project
 
 2. Add the `<QuartzCore/QuartzCore.h>` framework
 
 3. Download the [SVProgressHUD](https://github.com/samvermette/SVProgressHUD) and add it to the project
 
-4. Add the url scheme in the info.plist using fb<YOUR_FACEBOOK_APP_ID>
+4. Add the code below to your AppDelegate.m file:
 
-  ![Plist](http://assets.flubbermedia.com/github/github-fmfacebookpanel-plist.png)
+```objectivec
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    
+    return [FBAppCall handleOpenURL:url sourceApplication:sourceApplication];
+}
+```
 
-Setup
------
-
-1. Setup the sharedViewController with your Facebook App ID
-
-	```objectivec
-	- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-	{
-    	[[FMFacebookPanel sharedViewController] setup:kFacebookAppID];
-    	return YES;
-	}
-	```
-
-2. Let the Facebook property handle the url in the `application:handleOpenURL:`
-
-	```objectivec
-	- (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url
-	{    
-    	return [[FMFacebookPanel sharedViewController].facebook handleOpenURL:url];
-	}
-	```
+**NOTE: the supported build target is iOS 5.0 (Xcode 4.5)*
 
 Usage
 -----
 (see sample Xcode project `/Demo`)
 
-Use the shared view controller to set the initial text with an image or a link
+Use the shared view controller to set the initial text with an image:
 
 ```objectivec
-[[FMFacebookPanel sharedViewController] setText:text];
-[[FMFacebookPanel sharedViewController] setImage:image];
+[FMFacebookPanel sharedViewController].postText = @"Image text here";
+[FMFacebookPanel sharedViewController].postImage = [UIImage imageNamed:@"Flubber.png"];
+[[FMFacebookPanel sharedViewController] present];
+```
+or a link:
+
+```objectivec
+[FMFacebookPanel sharedViewController].postText = @"Link text here";
+[FMFacebookPanel sharedViewController].postLink = @"http://flubbermedia.com";
 [[FMFacebookPanel sharedViewController] present];
 ```
 
 Credits
 -------
 FMFacebookPanel was created by [Maurizio Cremaschi](http://cremaschi.me) and [Andrea Ottolina](http://andreaottolina.com) for [Flubber Media Ltd](http://flubbermedia.com).
+
+This component is currently used by these apps:
+
+- Facebomb: https://itunes.apple.com/app/id523279606
+- Stickers: https://itunes.apple.com/app/id527239154
