@@ -47,10 +47,6 @@
 
 @interface FMFacebookPanel : UIViewController <UITextViewDelegate>
 
-@property (strong, nonatomic) NSString *postText;
-@property (strong, nonatomic) UIImage *postImage;
-@property (strong, nonatomic) NSString *postLink;
-
 @property (strong, nonatomic) NSString *postRequestStartedMessage;
 @property (strong, nonatomic) NSString *postRequestSucceedMessage;
 @property (strong, nonatomic) NSString *postRequestErrorMessage;
@@ -59,5 +55,9 @@
 + (FMFacebookPanel *)sharedViewController;
 - (void)present;
 - (void)dismiss;
+
+- (void)setInitialText:(NSString *)text;
+- (void)addImage:(UIImage *)image;
+- (void)addURL:(NSURL *)url;
 
 @end

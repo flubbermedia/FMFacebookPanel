@@ -106,13 +106,10 @@
 
 @interface FMFacebookPanel ()
 
-typedef enum {
-	PostTypeText,
-	PostTypeImage,
-	PostTypeLink
-} PostType;
+@property (strong, nonatomic) NSString *text;
+@property (strong, nonatomic) UIImage *image;
+@property (strong, nonatomic) NSURL *url;
 
-@property (assign, nonatomic) PostType postType;
 @property (strong, nonatomic) NSDictionary *fbPayload;
 @property (strong, nonatomic) NSArray *fbPermissions;
 
@@ -181,7 +178,6 @@ typedef enum {
 	self = [super init];
 	if (self)
 	{
-		_postType = PostTypeText;
 		
 		_postRequestStartedMessage = NSLocalizedString(@"Posting to Facebook", @"Facebook integration: Message displayed when the app tries to post a picture on the user's Facebook wall.");
 		_postRequestSucceedMessage = @"";
@@ -189,6 +185,21 @@ typedef enum {
 		_postAuthenticationErrorMessage = NSLocalizedString(@"Error authenticating User", @"Facebook integration: Message displayed when an error occured while trying to authenticate the user.");
 		
 		_fbPermissions = @[@"public_profile", @"publish_actions"];
+		
+		_backgroundImageView = [UIImageView new];
+		_containerView = [UIView new];
+		_contentContainerView = [UIView new];
+		_textContainerView = [UIView new];
+		_textView = [LineTextView new];
+		_headerImageView = [UIImageView new];
+		_cancelButton = [UIButton buttonWithType:UIButtonTypeCustom];
+		_postButton = [UIButton buttonWithType:UIButtonTypeCustom];
+		_facebookLabel = [UILabel new];
+		_chromeImageView = [UIImageView new];
+		_imageImageView = [UIImageView new];
+		_imageChromeImageView = [UIImageView new];
+		_imageClipImageView = [UIImageView new];
+		
 	}
 	return self;
 }
@@ -214,28 +225,23 @@ typedef enum {
 												 name:UIDeviceOrientationDidChangeNotification
 											   object:nil];
 	
-	_backgroundImageView = [UIImageView new];
 	_backgroundImageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	_backgroundImageView.alpha = 0.;
 	[self.view addSubview:_backgroundImageView];
 	
-	_containerView = [UIView new];
 	_containerView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 	[self.view addSubview:_containerView];
-
-	_contentContainerView = [UIView new];
+	
 	_contentContainerView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	_contentContainerView.backgroundColor = [UIColor whiteColor];
 	_contentContainerView.layer.cornerRadius = 10.;
 	_contentContainerView.layer.masksToBounds = YES;
 	[_containerView addSubview:_contentContainerView];
 	
-	_textContainerView = [UIView new];
 	_textContainerView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	_textContainerView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"FBSheetBottomShadow.png"]];
 	[_contentContainerView addSubview:_textContainerView];
 	
-	_textView = [LineTextView new];
 	_textView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	_textView.backgroundColor = [UIColor clearColor];
 	_textView.delegate = self;
@@ -249,11 +255,9 @@ typedef enum {
 	_textView.linesShouldFollowSuperview = YES;
 	[_textContainerView addSubview:_textView];
 	
-	_headerImageView = [UIImageView new];
 	_headerImageView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 	[_containerView addSubview:_headerImageView];
 	
-	_cancelButton = [UIButton buttonWithType:UIButtonTypeCustom];
 	_cancelButton.autoresizingMask = UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleBottomMargin;
 	_cancelButton.titleLabel.shadowOffset = CGSizeMake(0., -1.);
 	[_cancelButton setTitle:NSLocalizedString(@"Cancel", @"Facebook integration") forState:UIControlStateNormal];
@@ -263,7 +267,6 @@ typedef enum {
 	[_cancelButton addTarget:self action:@selector(dismiss) forControlEvents:UIControlEventTouchUpInside];
 	[_containerView addSubview:_cancelButton];
 	
-	_postButton = [UIButton buttonWithType:UIButtonTypeCustom];
 	_postButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
 	_postButton.titleLabel.shadowOffset = CGSizeMake(0., -1.);
 	[_postButton setTitle:NSLocalizedString(@"Post", @"Facebook integration") forState:UIControlStateNormal];
@@ -272,7 +275,6 @@ typedef enum {
 	[_postButton addTarget:self action:@selector(post) forControlEvents:UIControlEventTouchUpInside];
 	[_containerView addSubview:_postButton];
 	
-	_facebookLabel = [UILabel new];
 	_facebookLabel.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleBottomMargin;
 	_facebookLabel.text = @"Facebook";
 	_facebookLabel.textAlignment = NSTextAlignmentCenter;
@@ -301,9 +303,9 @@ typedef enum {
 	_imageClipImageView = [UIImageView new];
 	_imageClipImageView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
 	[_containerView addSubview:_imageClipImageView];
-
+	
 	// Frame setup
-
+	
 	// IPHONE 3.5"
 	_containerViewFrame = CGRectMake(0., 0., 310., 200.);
 	_containerViewCenter = CGPointMake(160., 115.);
@@ -366,7 +368,7 @@ typedef enum {
 	
 	_imageClipImageView.image = [UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetPaperClip.png"];
 	_imageChromeImageView.image = [[UIImage imageNamed:@"FMFacebookPanel.bundle/FBSheetImageBorderSquare.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(39., 41., 39., 42.)];
-
+	
 	[self updateLayout];
 }
 
@@ -374,11 +376,10 @@ typedef enum {
 {
 	[super viewDidDisappear:animated];
 	
-	_postType = PostTypeText;
 	// self to execute custom setter
-	self.postImage = nil;
-	self.postLink = nil;
-	self.postText = nil;
+	self.text = nil;
+	self.image = nil;
+	self.url = nil;
 }
 
 #pragma mark - Rotation
@@ -395,10 +396,10 @@ typedef enum {
 #pragma mark - Public methods
 
 - (void)present
-{	
+{
 	UIViewController *rootVC = [UIApplication sharedApplication].keyWindow.rootViewController;
 	self.view.frame = rootVC.view.bounds;
-
+	
 	[rootVC.view addSubview:self.view];
 	[self viewWillAppear:YES];
 	
@@ -434,40 +435,33 @@ typedef enum {
 					 }];
 }
 
-#pragma mark - Properties
-
-- (void)setPostText:(NSString *)text
+- (void)setInitialText:(NSString *)text
 {
-	_postText = text;
-	_postType = PostTypeText;
-	
+	_text = text;
 	dispatch_async(dispatch_get_main_queue(), ^{
 		_textView.text = text;
 	});
 }
 
-- (void)setPostImage:(UIImage *)image
+- (void)addImage:(UIImage *)image
 {
-	_postImage = image;
-	_postType = PostTypeImage;
-	
+	_image = image;
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[self showHideImageView];
 	});
 }
 
-- (void)setPostLink:(NSString *)link
+- (void)addURL:(NSURL *)url
 {
-	_postLink = link;
-	_postType = PostTypeLink;
+	_url = url;
 }
 
 #pragma mark - Layout
 
 - (void)updateLayout
 {
-//	BOOL isLandscape = UIInterfaceOrientationIsLandscape(self.interfaceOrientation);
-
+	//	BOOL isLandscape = UIInterfaceOrientationIsLandscape(self.interfaceOrientation);
+	
 	// Using statusBarOrientation for better support in iOS5.
 	BOOL isLandscape = UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation);
 	BOOL isiPhone = (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone);
@@ -502,7 +496,7 @@ typedef enum {
 	_textView.frame = CGRectOffset(_textContainerView.bounds, 0., -10);
 	
 	_imageImageView.frame = CGRectMake(CGRectGetWidth(_containerView.bounds) - 78., 20., 72., 72.);
-	_imageChromeImageView.frame = UIEdgeInsetsInsetRect(_imageImageView.frame, UIEdgeInsetsMake(-2., -6., -6., -6.));	
+	_imageChromeImageView.frame = UIEdgeInsetsInsetRect(_imageImageView.frame, UIEdgeInsetsMake(-2., -6., -6., -6.));
 	_imageClipImageView.frame = CGRectMake(CGRectGetWidth(_containerView.bounds) - 74., 60., 79., 34.);
 	
 	[self showHideImageView];
@@ -510,9 +504,9 @@ typedef enum {
 
 - (void)showHideImageView
 {
-	_imageImageView.image = _postImage;
+	_imageImageView.image = _image;
 	
-	BOOL show = (_postImage != nil);
+	BOOL show = (_image != nil);
 	
 	_imageImageView.hidden = !show;
 	_imageClipImageView.hidden = !show;
@@ -566,16 +560,14 @@ typedef enum {
 	
 	NSMutableDictionary *params = [NSMutableDictionary new];
 	[params addEntriesFromDictionary:@{@"message": _textView.text}];
-	switch (_postType) {
-		case PostTypeImage:
-			path = @"/me/photos";
-			[params addEntriesFromDictionary:@{@"source": _postImage}];
-			break;
-		case PostTypeLink:
-			[params addEntriesFromDictionary:@{@"link": _postLink}];
-			break;
-		default:
-			break;
+	if (_image)
+	{
+		path = @"/me/photos";
+		[params addEntriesFromDictionary:@{@"source": _image}];
+	}
+	else if (_url)
+	{
+		[params addEntriesFromDictionary:@{@"link": _url}];
 	}
 	
 	_fbPayload = @{@"path": path, @"params": params};
@@ -586,19 +578,19 @@ typedef enum {
 }
 
 - (void)warmUpFacebookSession
-{	
+{
 	if (FBSession.activeSession.isOpen) {
 		if ([self activeSessionHasPermissions:_fbPermissions]) {
 			[self sendPayloadIfPossible];
 		} else {
 			[FBSession.activeSession reauthorizeWithPublishPermissions:_fbPermissions defaultAudience:FBSessionDefaultAudienceFriends completionHandler:^(FBSession *session, NSError *error) {
 				[self sessionStateChanged:session state:session.state error:error];
-            }];
+			}];
 		}
 	} else {
 		[FBSession openActiveSessionWithPermissions:_fbPermissions allowLoginUI:YES completionHandler:^(FBSession *session, FBSessionState status, NSError *error) {
-            [self sessionStateChanged:session state:status error:error];
-        }];
+			[self sessionStateChanged:session state:status error:error];
+		}];
 	}
 }
 
