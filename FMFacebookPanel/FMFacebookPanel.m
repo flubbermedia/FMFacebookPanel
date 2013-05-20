@@ -186,19 +186,21 @@
 		
 		_fbPermissions = @[@"public_profile", @"publish_actions"];
 		
-		_backgroundImageView = [UIImageView new];
-		_containerView = [UIView new];
-		_contentContainerView = [UIView new];
-		_textContainerView = [UIView new];
-		_textView = [LineTextView new];
-		_headerImageView = [UIImageView new];
-		_cancelButton = [UIButton buttonWithType:UIButtonTypeCustom];
-		_postButton = [UIButton buttonWithType:UIButtonTypeCustom];
-		_facebookLabel = [UILabel new];
-		_chromeImageView = [UIImageView new];
-		_imageImageView = [UIImageView new];
-		_imageChromeImageView = [UIImageView new];
-		_imageClipImageView = [UIImageView new];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            _backgroundImageView = [UIImageView new];
+            _containerView = [UIView new];
+            _contentContainerView = [UIView new];
+            _textContainerView = [UIView new];
+            _textView = [LineTextView new];
+            _headerImageView = [UIImageView new];
+            _cancelButton = [UIButton buttonWithType:UIButtonTypeCustom];
+            _postButton = [UIButton buttonWithType:UIButtonTypeCustom];
+            _facebookLabel = [UILabel new];
+            _chromeImageView = [UIImageView new];
+            _imageImageView = [UIImageView new];
+            _imageChromeImageView = [UIImageView new];
+            _imageClipImageView = [UIImageView new];
+        });
 		
 	}
 	return self;
