@@ -563,11 +563,11 @@
 	if (_image)
 	{
 		path = @"/me/photos";
-		[params addEntriesFromDictionary:@{@"source": _image}];
+		[params addEntriesFromDictionary:@{@"source": UIImageJPEGRepresentation(_image, 1.0)}];
 	}
 	else if (_url)
 	{
-		[params addEntriesFromDictionary:@{@"link": _url}];
+		[params addEntriesFromDictionary:@{@"link": _url.absoluteString}];
 	}
 	
 	_fbPayload = @{@"path": path, @"params": params};

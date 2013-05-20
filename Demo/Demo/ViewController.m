@@ -24,15 +24,15 @@
 
 - (IBAction)didTapShareImage:(id)sender
 {
-	[FMFacebookPanel sharedViewController].postText = @"Image text here";
-	[FMFacebookPanel sharedViewController].postImage = [UIImage imageNamed:@"Flubber.png"];
+	[[FMFacebookPanel sharedViewController] setInitialText:@"Image text here"];
+	[[FMFacebookPanel sharedViewController] addImage:[UIImage imageNamed:@"Flubber.png"]];
 	[[FMFacebookPanel sharedViewController] present];
 }
 
 - (IBAction)didTapShareLink:(id)sender
 {
-	[FMFacebookPanel sharedViewController].postText = @"Link text here";
-	[FMFacebookPanel sharedViewController].postLink = @"http://flubbermedia.com";
+	[[FMFacebookPanel sharedViewController] setInitialText:@"Link text here"];
+	[[FMFacebookPanel sharedViewController] addURL:[NSURL URLWithString:@"http://flubbermedia.com"]];
 	[[FMFacebookPanel sharedViewController] present];
 }
 
