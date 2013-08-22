@@ -186,21 +186,19 @@
 		
 		_fbPermissions = @[@"public_profile", @"publish_actions"];
 		
-        dispatch_async(dispatch_get_main_queue(), ^{
-            _backgroundImageView = [UIImageView new];
-            _containerView = [UIView new];
-            _contentContainerView = [UIView new];
-            _textContainerView = [UIView new];
-            _textView = [LineTextView new];
-            _headerImageView = [UIImageView new];
-            _cancelButton = [UIButton buttonWithType:UIButtonTypeCustom];
-            _postButton = [UIButton buttonWithType:UIButtonTypeCustom];
-            _facebookLabel = [UILabel new];
-            _chromeImageView = [UIImageView new];
-            _imageImageView = [UIImageView new];
-            _imageChromeImageView = [UIImageView new];
-            _imageClipImageView = [UIImageView new];
-        });
+		_backgroundImageView = [UIImageView new];
+		_containerView = [UIView new];
+		_contentContainerView = [UIView new];
+		_textContainerView = [UIView new];
+		_textView = [LineTextView new];
+		_headerImageView = [UIImageView new];
+		_cancelButton = [UIButton buttonWithType:UIButtonTypeCustom];
+		_postButton = [UIButton buttonWithType:UIButtonTypeCustom];
+		_facebookLabel = [UILabel new];
+		_chromeImageView = [UIImageView new];
+		_imageImageView = [UIImageView new];
+		_imageChromeImageView = [UIImageView new];
+		_imageClipImageView = [UIImageView new];
 		
 	}
 	return self;
@@ -440,17 +438,13 @@
 - (void)setInitialText:(NSString *)text
 {
 	_text = text;
-	dispatch_async(dispatch_get_main_queue(), ^{
-		_textView.text = text;
-	});
+	_textView.text = text;
 }
 
 - (void)addImage:(UIImage *)image
 {
 	_image = image;
-	dispatch_async(dispatch_get_main_queue(), ^{
-		[self showHideImageView];
-	});
+	[self showHideImageView];
 }
 
 - (void)addURL:(NSURL *)url
