@@ -398,6 +398,11 @@
 - (void)present
 {
 	UIViewController *rootVC = [UIApplication sharedApplication].keyWindow.rootViewController;
+	if (rootVC == nil)
+	{
+		// useful with iOS7
+		rootVC = [UIApplication sharedApplication].delegate.window.rootViewController;
+	}
 	self.view.frame = rootVC.view.bounds;
 	
 	[rootVC.view addSubview:self.view];
