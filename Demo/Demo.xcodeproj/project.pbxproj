@@ -374,8 +374,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\\\"$(SRCROOT)/Demo\\\"",
-					/Users/andrea/git/Flubbermedia/FMFacebookPanel/Demo/Demo,
+					"$(SRCROOT)/Demo",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Demo/Demo-Prefix.pch";
@@ -390,8 +389,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\\\"$(SRCROOT)/Demo\\\"",
-					/Users/andrea/git/Flubbermedia/FMFacebookPanel/Demo/Demo,
+					"$(SRCROOT)/Demo",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Demo/Demo-Prefix.pch";
