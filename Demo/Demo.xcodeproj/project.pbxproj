@@ -32,12 +32,11 @@
 		6539DA6817410BB500FE3EE0 /* Icon-72@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 6539DA5E17410BB500FE3EE0 /* Icon-72@2x.png */; };
 		6539DA6917410BB500FE3EE0 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 6539DA5F17410BB500FE3EE0 /* Icon.png */; };
 		6539DA6A17410BB500FE3EE0 /* Icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 6539DA6017410BB500FE3EE0 /* Icon@2x.png */; };
-		6539DA6C17410C8F00FE3EE0 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6539DA6B17410C8F00FE3EE0 /* FacebookSDK.framework */; };
-		6539DA6E17410C9B00FE3EE0 /* FacebookSDKResources.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 6539DA6D17410C9B00FE3EE0 /* FacebookSDKResources.bundle */; };
 		6539DA7317410CE300FE3EE0 /* SVProgressHUD.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 6539DA7017410CE300FE3EE0 /* SVProgressHUD.bundle */; };
 		6539DA7417410CE300FE3EE0 /* SVProgressHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = 6539DA7217410CE300FE3EE0 /* SVProgressHUD.m */; };
 		6539DA7617410D5200FE3EE0 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6539DA7517410D5200FE3EE0 /* Security.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		6539DA7817410D5700FE3EE0 /* Social.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6539DA7717410D5700FE3EE0 /* Social.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		65ACF77A18836997006342CA /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65ACF77918836997006342CA /* FacebookSDK.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -72,13 +71,12 @@
 		6539DA5E17410BB500FE3EE0 /* Icon-72@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-72@2x.png"; sourceTree = "<group>"; };
 		6539DA5F17410BB500FE3EE0 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
 		6539DA6017410BB500FE3EE0 /* Icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon@2x.png"; sourceTree = "<group>"; };
-		6539DA6B17410C8F00FE3EE0 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FacebookSDK.framework; path = Demo/FacebookSDK.framework; sourceTree = "<group>"; };
-		6539DA6D17410C9B00FE3EE0 /* FacebookSDKResources.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; name = FacebookSDKResources.bundle; path = Demo/FacebookSDK.framework/Versions/A/Resources/FacebookSDKResources.bundle; sourceTree = "<group>"; };
 		6539DA7017410CE300FE3EE0 /* SVProgressHUD.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = SVProgressHUD.bundle; sourceTree = "<group>"; };
 		6539DA7117410CE300FE3EE0 /* SVProgressHUD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SVProgressHUD.h; sourceTree = "<group>"; };
 		6539DA7217410CE300FE3EE0 /* SVProgressHUD.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SVProgressHUD.m; sourceTree = "<group>"; };
 		6539DA7517410D5200FE3EE0 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		6539DA7717410D5700FE3EE0 /* Social.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Social.framework; path = System/Library/Frameworks/Social.framework; sourceTree = SDKROOT; };
+		65ACF77918836997006342CA /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FacebookSDK.framework; path = Demo/FacebookSDK.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +85,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				141454BB16626B9F003B21E0 /* Accounts.framework in Frameworks */,
+				65ACF77A18836997006342CA /* FacebookSDK.framework in Frameworks */,
 				141454C116626C7A003B21E0 /* AdSupport.framework in Frameworks */,
 				6539DA7617410D5200FE3EE0 /* Security.framework in Frameworks */,
 				6539DA7817410D5700FE3EE0 /* Social.framework in Frameworks */,
@@ -95,7 +94,6 @@
 				14B2828B15BEF1420030CAC5 /* Foundation.framework in Frameworks */,
 				14B2828D15BEF1420030CAC5 /* CoreGraphics.framework in Frameworks */,
 				149C14F015D94E7000382841 /* QuartzCore.framework in Frameworks */,
-				6539DA6C17410C8F00FE3EE0 /* FacebookSDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -136,14 +134,13 @@
 			children = (
 				141454BA16626B9F003B21E0 /* Accounts.framework */,
 				141454C016626C7A003B21E0 /* AdSupport.framework */,
+				14B2828C15BEF1420030CAC5 /* CoreGraphics.framework */,
+				65ACF77918836997006342CA /* FacebookSDK.framework */,
+				14B2828A15BEF1420030CAC5 /* Foundation.framework */,
 				141454BC16626BF1003B21E0 /* libsqlite3.dylib */,
+				149C14EF15D94E7000382841 /* QuartzCore.framework */,
 				6539DA7517410D5200FE3EE0 /* Security.framework */,
 				6539DA7717410D5700FE3EE0 /* Social.framework */,
-				6539DA6B17410C8F00FE3EE0 /* FacebookSDK.framework */,
-				6539DA6D17410C9B00FE3EE0 /* FacebookSDKResources.bundle */,
-				14B2828C15BEF1420030CAC5 /* CoreGraphics.framework */,
-				14B2828A15BEF1420030CAC5 /* Foundation.framework */,
-				149C14EF15D94E7000382841 /* QuartzCore.framework */,
 				14B2828815BEF1420030CAC5 /* UIKit.framework */,
 			);
 			name = Frameworks;
@@ -268,7 +265,6 @@
 				6539DA6817410BB500FE3EE0 /* Icon-72@2x.png in Resources */,
 				6539DA6917410BB500FE3EE0 /* Icon.png in Resources */,
 				6539DA6A17410BB500FE3EE0 /* Icon@2x.png in Resources */,
-				6539DA6E17410C9B00FE3EE0 /* FacebookSDKResources.bundle in Resources */,
 				6539DA7317410CE300FE3EE0 /* SVProgressHUD.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -322,7 +318,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
@@ -352,7 +348,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
@@ -365,7 +361,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1.1;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -378,7 +374,8 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/Demo\"",
+					"\\\"$(SRCROOT)/Demo\\\"",
+					/Users/andrea/git/Flubbermedia/FMFacebookPanel/Demo/Demo,
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Demo/Demo-Prefix.pch";
@@ -393,7 +390,8 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/Demo\"",
+					"\\\"$(SRCROOT)/Demo\\\"",
+					/Users/andrea/git/Flubbermedia/FMFacebookPanel/Demo/Demo,
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Demo/Demo-Prefix.pch";
